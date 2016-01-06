@@ -1,0 +1,55 @@
+module MathTest
+
+// import Native // No hace falta importarlo, es implícito
+
+MathTest.raise (Native.Function) {
+  args (Array) {
+    class Class // El campo class espera un objeto externo, y ese objeto está
+      // en el módulo Native y es Class, es decir, Native.Class.
+    Int // [0] base
+    Int // [1] exponent
+  }
+  code (Code) @LLCode { // Low Level Code Syntax
+    base = Args[0]
+    exp  = Args[1] // exponent
+    result = 1
+    :loop
+    cond = exp > 0
+    goto :end ifnot cond
+    result = result * base
+    goto :loop
+    :end
+    Args[0] = result
+  }
+}
+
+// Traduce a:
+// raise_code puede tener errores... No soy una Máquina!
+
+module MathTest
+import Native
+
+MathTest (Native.Module) {
+  raise raise_fun
+}
+
+raise_fun (Native.Function) {
+  args raise_args
+  code raise_code
+}
+
+raise_args (Native.Array) {
+  class Native.Class
+  Int; Int
+}
+
+raise_code (Native.Code) {
+  getarg 0 0
+  getarg 1 1
+  setint 2 1
+  gtz 3 1
+  gotoifn 7 3
+  mult 2 2 0
+  goto 3
+  setarg 2 0
+}

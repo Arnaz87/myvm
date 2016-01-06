@@ -1,0 +1,59 @@
+# depslib dependency file v1.0
+1449115956 source:/home/arnaud/Proyectos/myvm/src/heap.c
+	"heap.h"
+
+1449115913 /home/arnaud/Proyectos/myvm/src/heap.h
+	"value.h"
+	"object.h"
+
+1449116859 source:/home/arnaud/Proyectos/myvm/src/main.c
+	<stdio.h>
+	<string.h>
+	"value.h"
+	"object.h"
+	"heap.h"
+	"module.h"
+	"native.h"
+	"machine.h"
+	"bytecodes.h"
+
+1448847703 /home/arnaud/Proyectos/myvm/src/value.h
+
+1449116026 /home/arnaud/Proyectos/myvm/src/object.h
+	"value.h"
+
+1449100713 /home/arnaud/Proyectos/myvm/src/module.h
+	"value.h"
+	"object.h"
+	"heap.h"
+
+1449116517 source:/home/arnaud/Proyectos/myvm/src/module.c
+	"module.h"
+
+1448858520 source:/home/arnaud/Proyectos/myvm/src/native.c
+	"native.h"
+
+1448666696 /home/arnaud/Proyectos/myvm/src/native.h
+	"value.h"
+	"machine.h"
+
+1448774096 /home/arnaud/Proyectos/myvm/src/machine.h
+	"value.h"
+	"heap.h"
+
+1449100952 source:/home/arnaud/Proyectos/myvm/src/execute.c
+	<stdio.h>
+	"execute.h"
+	"heap.h"
+	"native.h"
+	"module.h"
+	"bytecodes.h"
+
+1448601697 /home/arnaud/Proyectos/myvm/src/execute.h
+	"machine.h"
+
+1449100100 /home/arnaud/Proyectos/myvm/src/bytecodes.h
+
+1448860219 source:/home/arnaud/Proyectos/myvm/src/machine.c
+	"machine.h"
+
