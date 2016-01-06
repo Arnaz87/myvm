@@ -1,11 +1,9 @@
+// Versión con azúcar sintáctico.
 module MathTest
-
-// import Native // No hace falta importarlo, es implícito
 
 MathTest.raise (Native.Function) {
   args (Array) {
-    class Class // El campo class espera un objeto externo, y ese objeto está
-      // en el módulo Native y es Class, es decir, Native.Class.
+    class Class // los objetos en el array son Clases...
     Int // [0] base
     Int // [1] exponent
   }
@@ -23,26 +21,58 @@ MathTest.raise (Native.Function) {
   }
 }
 
-// Traduce a:
-// raise_code puede tener errores... No soy una Máquina!
+/*
+En la sintaxis cruda, "MathTest.raise" no es legal, porque no se puede declarar
+un slot de un objeto fuera de la definición de ese objeto, así que esta
+definición se transforma en "raise_def" y en la definición de "MathTest" se
+inserta "raise raise_def". Pero MathTest no se declara en el texto, así que el
+compilador lo declara y lo define automáticamente.
+En MathTest.raise se define el slot "args", que tampoco es legal, dentro de un
+objeto solo se puede declarar y la definición tiene que ir por fuera, y eso es
+precisamente lo que el compilador hace automáticamente.
+En MathTest.code, hay un token "@LLCode". Los tokens que empiezan con arroba
+indican una sintaxis alternativa, eso significa que el bloque que le sigue se
+procesa de manera diferente que el resto del archivo. En este caso, la sintaxis
+es para escribir código más fácilmente, usando una sintaxis un poco más
+abstracta, y el compilador lo transforma a bytecodes normales.
+*/
 
-module MathTest
+/*
+name := [a-zA-Z0-9_-]+
+qualified := name("." name)*
+end := ";" | "\n"
+top_level := import | export | object
+import := "import " name end
+export := "export " name end
+object := qualified "(" qualified ")" (objbody | objsyntax)
+objbody := "{" (objline end) "}"
+objline := name qualified | object
+objsyntax := "@"name "{" .+ "}"
+*/
+
+// ------------------
+// Versión sin azúcar sintáctico.
+
+module MathTest // También podría ser export...
 import Native
 
 MathTest (Native.Module) {
-  raise raise_fun
+  raise raise_def
 }
 
-raise_fun (Native.Function) {
+raise_def (Native.Function) {
   args raise_args
   code raise_code
 }
 
 raise_args (Native.Array) {
   class Native.Class
-  Int; Int
+  size 2
+  0 Int
+  1 Int
 }
 
+// Probablemente esto contiene errores... No soy una Máquina!
 raise_code (Native.Code) {
   getarg 0 0
   getarg 1 1
@@ -53,3 +83,17 @@ raise_code (Native.Code) {
   goto 3
   setarg 2 0
 }
+
+/*
+name := [a-zA-Z0-9_-]+
+qualified := name("." name)*
+end := ";" | "\n"
+top_level := import | export | object
+import := "import " name end
+export := "export " name end
+object := name "(" qualified ")" objbody
+objbody := "{" (objline end)+ "}" /* Mas o menos... */
+objline := name qualified /* No todos respetan este... */
+  /* En Array.size, 2 no es qualified. */
+  /* En Native.Code, ninguna linea respeta objline */
+*/
