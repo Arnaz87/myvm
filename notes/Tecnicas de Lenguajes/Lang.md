@@ -90,7 +90,6 @@ el pseudocódigo:
   
     d = {a=1, b=2}
     d["c"] = 3
-    d.d = 4 // Mejor no usar esta...
     key = "f"
     d[key] = d["b"]
     ikey = d["a"]
@@ -139,6 +138,11 @@ array, en minúsculas para no confundirlos con las clases del usuario, es decir:
 Los tipos van en minúscula: int, float, string, arr, dict, var
 Las clases van camelcased: Foo, Bar, FooBar, CamelCase
 Las variables snakecased: foo, bar, foo_bar, snake_case
+
+Hay tres variables especiales:
+this: la instancia que ejecuta el método actual.
+super: una versión de this cuya clase es la superclase.
+null: indica la ausencia de una variable.
 
 Los tipos de Lang y su equivalente en C:
 int => int

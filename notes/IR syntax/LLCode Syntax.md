@@ -12,13 +12,13 @@ El código de bajo nivel sí puede crear variables, símplemente crea un
 diccionario con cada nombre de variable usado en el código y lo mapea a un
 índice único en los registros. No se puede hacer lo mismo con los argumentos,
 ellos se acceden como si fuesen un Array. Los nombres de variables son siempre
-en minúsculas con palabras separadas con subguiones (ej: `snake_case`). Y los
-argumentos se usan como si existiese un array Args (ej: `Args[0]`).
+en minúsculas con palabras separadas con subguiones (ej: *snake_case*). Y los
+argumentos se usan como si existiese un array Args (ej: *Args[0]*).
 
 También se pueden crear labels con LLCode, para facilitar el uso de los goto.
 Los labels funcionan como variables, simplemente es un diccionario mapeando
 un nombre de label a un número de línea (o instrucción). Un nombre de label
-es igual que el de variable pero predecido de dos puntos (ej: `:label_name`).
+es igual que el de variable pero predecido de dos puntos (ej: *:label_name*).
 Para declarar un label solo se escribe su nombre en una línea para él solo,
 y el traductor captura el número de la línea en que fue declarado.
 
@@ -34,47 +34,48 @@ del lado izquierdo, va a decir lo mismo del lado derecho.
 
 Las operaciones binarias siempre se aplican sobre dos variables y se guardan
 en otra. La sintaxis de LLCode para todas las operaciones es
-`$1 = $2 OP $3 => CODE $1 $2 $3`, donde `$1` es la variable (o registro) en
-donde se guarda el resultado, `$2` y `$3` son  respectivamente el primer y
-segundo argumento de la operación, `OP` es la operación en LLCode y `CODE`
+`$1 = $2 OP $3 => CODE $1 $2 $3`, donde _$1_ es la variable (o registro) en
+donde se guarda el resultado, _$2_ y _$3_ son  respectivamente el primer y
+segundo argumento de la operación, _OP_ es la operación en LLCode y _CODE_
 es el bytecode al que está asociada la operación.
 
 Una lista de los operadores binarios, sus bytecodes, y sus nombres:
-`+` => `add`: suma
-`-` => `sub`: resta
-`*` => `mult`: multiplicación
-`/` => `div`: división
-`%` => `mod`: módulo aritmético
-`**` => `pow`: potenciación
-`>>` => `right`: shift de bits a la derecha
-`<<` => `left` : shift de bits a la izquierda
-`|` => `or` : puerta OR  (binaria y lógica)
-`&` => `and`: puerta AND (binaria y lógica)
-`^` => `xor`: puerta XOR (binaria y lógica)
-`<`  => `lt`  : menor qué
-`<=` => `lteq`: menor o igual qué
-`==` => `eq`  : igual qué
-`!=` => `neq` : diferente de
-  Las siguientes traducen a `CODE $1 $3 $2`, es decir, invierten los argumentos.
-`>`  => `lt`  : mayor qué
-`>=` => `lteq`: mayor o igual qué
+
+* `+` => `add`: suma
+* `-` => `sub`: resta
+* `*` => `mult`: multiplicación
+* `/` => `div`: división
+* `%` => `mod`: módulo aritmético
+* `**` => `pow`: potenciación
+* `>>` => `right`: shift de bits a la derecha
+* `<<` => `left` : shift de bits a la izquierda
+* `|` => `or` : puerta OR  (binaria y lógica)
+* `&` => `and`: puerta AND (binaria y lógica)
+* `^` => `xor`: puerta XOR (binaria y lógica)
+* `<`  => `lt`  : menor qué
+* `<=` => `lteq`: menor o igual qué
+* `==` => `eq`  : igual qué
+* `!=` => `neq` : diferente de
+
+Las siguientes traducen a `CODE $1 $3 $2`, es decir, invierten los argumentos.
+
+* `>`  => `lt`  : mayor qué
+* `>=` => `lteq`: mayor o igual qué
 
 La siguiente es una lista del resto de las instrucciones posibles:
 
-    $1 = $2 => copy $1 $2
+* `$1 =  $2` => `copy $1 $2`
+* `$1 = -$2` => `neg $1 $2`
+* `$1 = !$2` => `not $1 $2`
+* `$1 = Args[#2]` => `getarg $1 #2`
+* `Args[#2] = $1` => `setarg $1 #2`
+* `$1()` => `call $1`
+* `@tail $1()` => `tailcall $1`
 
-    $1 = -$2 => neg $1 $2
-    $1 = !$2 => not $1 $2
+En estos 3, $1 es un label, no una variable
 
-    $1 = Args[#2] => getarg $1 #2
-    Args[#2] = $1 => setarg $1 #2
-
-    $1() => call $1
-    @tail $1() => tailcall $1
-
-  En estos 3, $1 es un label, no una variable
-    goto $1 => goto $1
-    goto $1 if $2 => gotoif $1 $2
-    goto $1 ifnot $2 => gotoifn $1 $2
+* `goto $1` => `goto $1`
+* `goto $1 if $2` => `gotoif $1 $2`
+* `goto $1 ifnot $2` => `gotoifn $1 $2`
 
 

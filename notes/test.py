@@ -148,4 +148,29 @@ testneq( nc() , c() )
 # Esto es una cosa de Python, aparentemente ignora el atributo que le puse a
 # nc, y salta de una vez al método que definí en la clase.
 
+gatr = object.__getattribute__
+carro = Carro()
+carro.ventanas == 6 # Comportamiento normal, lo esperado
+gatr(carro, "ventanas") == 6 # Usando getattribute de objeto, se comporta igual
+
+Carro.__getattribute__ = lambda self, key: "lol"
+carro.ventanas == "lol" # Reemplacé getattribute de la clase, debería pasar.
+
+gatr(carr, "ventanas") # Que debería pasar aquí?
+# Al hacer el experimento, me dio 6
+# Lo que significa que el getattribute de object es el que busca el valor
+# original en una instancia, lo que significa que internamente python sólo busca el primer
+# getattribute que el objeto tenga disponible y lo ejecuta, y la mayoría de
+# las veces el primero que se encuentra disponible es el de object, y es éste
+# método el que hace el resto del trabajo, no es código interno de python.
+
+Carro.__call__ = lambda self: print("hola")
+carro.__call__ == "lol" # El getattribute que puse sigue funcionando
+carro() # Esto imprime "hola"
+# La búsqueda de métodos especiales es interna, por eso getattribute no afecta
+gatr(carro, "__call__") # Decuelve bound_method lambda
+# gatr sigue funcionando, y devuelve el lambda que le asigné a carro, pero
+# este no es el método que usa Python internamente.
+
+
 
