@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# Esta linea de arriba es porque python2 no acepta unicode e.e
+# Por Dios! Son los comentarios! A quién le importa?!
+# menos mal lo arreglaron en Python 3...
+
+# Al final, la arquitectura de Python3 es muy diferente a la de Python2,
+# muchas de las pruebas de abajo fallan por diferencias en la semántica del
+# lenduaje, más que por la sintaxis, así que si quiere probar la arquitectura
+# de Python2, hay que hacer pruebas diferentes.
+
 # Prueba de python para probar como funciona el lenguaje...
 
 class Objeto:
@@ -32,6 +42,7 @@ current_test = None
 all_tests = dict()
 
 def TEST (name):
+  global current_test
   current_test = name
   print("Testing " + name + ":")
 
@@ -81,19 +92,60 @@ testeq( nmethod() , carro.saludar() )
 T("Override method not Original")
 testneq( carro.saludar() , Carro.saludar(carro) )
 
-# Volver a la normalidad
+# Restablecer
 del carro.__dict__["saludar"]
 
 T("Call Parent from Class")
 testeq( carro.nvel() , Carro.nvel(carro) )
 
-T("Parent Polyformism")
+# Esto en otros lenguajes vendría siendo polimorfismo, pero eso no
+# existe en Python porque todos los objetos se pueden comportar como
+# cualquier cosa. Esto no es buena práctica.
+T("Parent Impostor")
 carro.__class__ = Vehiculo
 testeq( type(carro), Vehiculo)
-
-T("Parent Polyformism not call original")
+T("Parent Impostor not call original")
 testneq( carro.saludar() , Carro.saludar(carro) )
-T("Parent Polyformism call new Class")
+T("Parent Impostor call new Class")
 testeq( carro.saludar() , Vehiculo.saludar(carro) )
+T("Parent Impostor keeps attributes")
+test( hasattr(carro, "ruedas") )
+T("Parent Impostor loses methods")
+testn( hasattr(carro, "rodar") )
+# Restablecer.
+carro.__class__ = Carro
+
+T("Impostor")
+o = Objeto() # Uso mi clase Objeto, porque no se puede modificar atributos para objeto.
+o.__class__ = Carro
+testeq( type(o) , Carro )
+T("Fool Impostor")
+o.__class__ = Objeto
+o.__dict__["class"] = Carro
+testneq( type(o) , Carro )
+T("Class attr is not in dict")
+testneq( o.__class__ , o.__dict__["class"] )
+T("Not instances fool Constructors")
+del o.__dict__["class"]
+Carro.__init__(o)
+testeq( o.ventanas , Carro().ventanas )
+
+class MyCall:
+  def __call__ (self):
+    return "Class Method"
+
+T("Class Call")
+c = MyCall()
+testeq( c() , "Class Method")
+T("Set Instance Call")
+nc = MyCall()
+nc.__call__ = lambda: "Instance Method"
+testneq( nc.__call__ , c.__call__ )
+T("Call special attribute")
+testneq( nc.__call__() , c.__call__() )
+T("Object Call not equal")
+testneq( nc() , c() )
+# Esto es una cosa de Python, aparentemente ignora el atributo que le puse a
+# nc, y salta de una vez al método que definí en la clase.
 
 

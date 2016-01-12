@@ -48,3 +48,46 @@ momento en que se llaman, por lo tanto no hacen falta métodos virtuales como
 en C++, simplemente se define un nuevo método en la clase hija con el mismo
 nombre para sobreescribirlos.
 
+## Notas
+
+Cosas de las que me dí cuenta después de jugar un poco con el lenguaje.
+Los objetos no son simplemente diccionarios, son más complejos que eso.
+Los objetos de tipo nativos son más como clases compiladas tipo C++, pero con
+la habilidad de saber el nombre de esos campos en ejecución. Las instancias
+de clases, además de tener sus propios campos nativos, usan un diccionario
+para guardar atributos dinámicos (que en sí mismo es un campo nativo). Cuando
+se usa un objeto, python hace una búsqueda de argumentos, que busca primero
+en los campos nativos, si es una instancia busca después en su diccionario
+de atributos. Si python no consigue el atributo, empieza la búsqueda de
+métodos, que es, busca en el tipo (o clase) de un objeto para ver si tiene
+una función con el nombre (normalmente están en un diccionario de la clase).
+Si la consigue, crea una función personalizada que cuando se llama, ejecuta la
+función encontrada pasando el mismo objeto como argumento, algo así:
+
+    if type(x).hasattr(attrname):
+      if type(type(x).getattr(attrname)) == method
+        return lambda: type(x).getattr(attrname)(x)
+
+Si la clase del objeto no contiene el método, sigue buscando en toda la
+ascendencia de clases del mismo modo. Si no consigue nada después de esto,
+se rinde y lanza un error.
+
+Los módulos también son como las instancias, tienen un campo nativo que es un
+diccionario, y ahí es donde se guarda todo lo que tiene que ver con el módulo.
+
+Otra cosa con python, específicamente con "new-style class", Si se tiene:
+
+    Class Foo:
+      def __call__(self):
+        return 5
+    f = Foo()
+    f.__call__ = lambda: 4
+    f()   # -> 5
+
+En este ejemplo, con las clases nuevas, `f()` ejecuta el método especial que
+está en la clase, salta lo que sea que puede tener la instancia, y devuelve 5.
+Esto se hizo así porque, si python primero buscara los métodos especiales en
+los atributos, `Foo()` daría error, porque está usando el método que devuelve
+5, en vez del estándar que crea nuevas instancias. En las clases viejas sí
+funciona, no sé que hacían, pero en las clases viejas los métodos especiales
+se buscaban primero en los atributos de la instancia.
