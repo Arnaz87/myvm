@@ -70,83 +70,90 @@ carro = Carro()
 T("Clase Carro")
 test( type(carro) == Carro )
 
-T("Set dict, access attr")
+T("Asignar dict, acceder attr")
 carro.__dict__["ventanas"] = 5
 test( carro.ventanas == 5 )
 
-T("Set attr, access dict")
+T("Asignar attr, acceder dict")
 carro.ventanas = 8
 test( carro.__dict__["ventanas"] == 8 )
 
-T("Direct Method Call")
+T("Usar método de Clase")
 testeq( carro.saludar() , Carro.saludar(carro))
 
-T("Method not in Dict")
+T("Dict no tiene el método")
 testn( "saludar" in carro.__dict__ )
 
-T("Override method with Dict")
+T("Sobrescribir método con dict")
 nmethod = lambda: "!"
 carro.__dict__["saludar"] = nmethod
 testeq( nmethod() , carro.saludar() )
-
-T("Override method not Original")
+T("Método sobreescrito")
 testneq( carro.saludar() , Carro.saludar(carro) )
-
-# Restablecer
+T("Reestablecer método sobrescrito")
 del carro.__dict__["saludar"]
+testeq( carro.saludar() , Carro.saludar(carro))
 
-T("Call Parent from Class")
+T("Usar método de la clase padre")
 testeq( carro.nvel() , Carro.nvel(carro) )
 
 # Esto en otros lenguajes vendría siendo polimorfismo, pero eso no
 # existe en Python porque todos los objetos se pueden comportar como
 # cualquier cosa. Esto no es buena práctica.
-T("Parent Impostor")
+T("Hacerse pasar por clase padre")
 carro.__class__ = Vehiculo
 testeq( type(carro), Vehiculo)
-T("Parent Impostor not call original")
+T("Impostor no usa sus métodos originales")
 testneq( carro.saludar() , Carro.saludar(carro) )
-T("Parent Impostor call new Class")
+T("Impostor usa métodos de la nueva clase")
 testeq( carro.saludar() , Vehiculo.saludar(carro) )
-T("Parent Impostor keeps attributes")
+T("Impostor mantiene sus viejos atributos")
 test( hasattr(carro, "ruedas") )
-T("Parent Impostor loses methods")
+T("Pero impostor pierde sus viejos métodos")
 testn( hasattr(carro, "rodar") )
 # Restablecer.
 carro.__class__ = Carro
 
-T("Impostor")
+T("Impostor de clase externa")
 o = Objeto() # Uso mi clase Objeto, porque no se puede modificar atributos para objeto.
 o.__class__ = Carro
 testeq( type(o) , Carro )
-T("Fool Impostor")
-o.__class__ = Objeto
+T("Impostor tonto que usa dict, no funciona")
+o = Objeto()
 o.__dict__["class"] = Carro
 testneq( type(o) , Carro )
-T("Class attr is not in dict")
+# Aquí se demuestra que python no lee el diccionario para revisar la clase.
+T("La clase no se guarda en dict")
 testneq( o.__class__ , o.__dict__["class"] )
-T("Not instances fool Constructors")
+# La clase de un objeto está en un atributo especial de la instancia,
+# no en el diccionario.
+T("Constructores pueden inicializar instancias de otras clases")
 del o.__dict__["class"]
 Carro.__init__(o)
 testeq( o.ventanas , Carro().ventanas )
+# En Python2 esto no funciona, porque antes revisaba que la instancia fuera
+# de la clase que la construye, este ya no es el caso en Python3.
 
 class MyCall:
   def __call__ (self):
     return "Class Method"
 
-T("Class Call")
+T("Método call de la clase")
 c = MyCall()
 testeq( c() , "Class Method")
-T("Set Instance Call")
+T("Asignar call a la instancia")
 nc = MyCall()
 nc.__call__ = lambda: "Instance Method"
 testneq( nc.__call__ , c.__call__ )
-T("Call special attribute")
+T("Llamar el call de la instancia")
 testneq( nc.__call__() , c.__call__() )
-T("Object Call not equal")
+T("Llamar el objeto como callable, no funciona")
 testneq( nc() , c() )
-# Esto es una cosa de Python, aparentemente ignora el atributo que le puse a
-# nc, y salta de una vez al método que definí en la clase.
+# en Python3 la búsqueda de métodos especiales empieza desde la clase, si una
+# instancia define métodos especiales se ignoran. Esto es así porque las clases
+# pueden definir métodos especiales, pero estos no son para que ellas las usen,
+# son para que las instancias de esa clase los use. Python2 sí considera los
+# atributos de la instancia para los métodos especiales.
 
 gatr = object.__getattribute__
 carro = Carro()
@@ -168,9 +175,28 @@ Carro.__call__ = lambda self: print("hola")
 carro.__call__ == "lol" # El getattribute que puse sigue funcionando
 carro() # Esto imprime "hola"
 # La búsqueda de métodos especiales es interna, por eso getattribute no afecta
-gatr(carro, "__call__") # Decuelve bound_method lambda
+gatr(carro, "__call__") # Devuelve bound_method lambda
 # gatr sigue funcionando, y devuelve el lambda que le asigné a carro, pero
-# este no es el método que usa Python internamente.
+# no tiene que ver, para los métodos especiales se usa otro mecanismo.  
+
+class Clase:
+  def __init__ (self):
+    self.x = 42
+
+satr = object.__setattr__
+
+c = Clase()
+c.x = 3
+c.x == 3
+
+Clase.__setattr__ = lambda self, key, val: object.__setattr__(self, key, val+10)
+
+c.x = 5
+c.x == 15
+
+satr(c, "x", 7)
+c.x == 7
+
 
 
 
