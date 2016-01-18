@@ -43,7 +43,7 @@ Una lista de los operadores binarios, sus bytecodes, y sus nombres:
 
 * `+` => `add`: suma
 * `-` => `sub`: resta
-* `*` => `mult`: multiplicación
+* `*` => `mul`: multiplicación
 * `/` => `div`: división
 * `%` => `mod`: módulo aritmético
 * `**` => `pow`: potenciación
@@ -56,6 +56,9 @@ Una lista de los operadores binarios, sus bytecodes, y sus nombres:
 * `<=` => `lteq`: menor o igual qué
 * `==` => `eq`  : igual qué
 * `!=` => `neq` : diferente de
+
+Nota: la multiplicación se llama "mul" en vez de "mult" para que sea
+consistente con el resto de las operaciones con nombres de 3 letras.
 
 Las siguientes traducen a `CODE $1 $3 $2`, es decir, invierten los argumentos.
 

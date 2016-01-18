@@ -70,3 +70,9 @@ implementación. Para solucionar esto, el buscador de módulos no usará los
 métodos del módulo string, sino que usará úna función C de comparación de
 strings y, luego, el módulo String registra esta misma función para usarse
 dentro del programa.
+
+# Metadatos
+
+Lo estaba pensando, y creo que los módulos deberían ser metadatos, no objetos,
+es decir, que no se pueda interactuar directamente con un módulo en el programa.
+Ya que voy a usar metadatos en la máquina creo que es mejor si lo hago así.
