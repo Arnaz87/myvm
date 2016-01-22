@@ -50,6 +50,10 @@ function startsWithAny (str, prefixes) {
 }
 
 function tokenize (instate) {
+  if (instate.tokenized) {
+    console.log("Already tokenized!");
+    return instate.tokens;
+  }
   var input = instate.input;
   var left = input;
   var tokens = [];
@@ -123,6 +127,7 @@ function tokenize (instate) {
     consume(tkn.match.length);
   }
   instate.tokens = tokens;
+  instate.tokenized = true;
   return tokens;
 }
 

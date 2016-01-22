@@ -3,6 +3,10 @@
 const pstate = require("./parse_state.js");
 
 function parse (instate) {
+  if (instate.parsed) {
+    console.log("Already parsed!");
+    return instate.ast;
+  }
   var tokens = instate.tokens;
   // Token State
   var pos = 0;
@@ -285,6 +289,7 @@ function parse (instate) {
   var result = parse_seq();
   console.log("Parser consumed " + pos + " of " + tokens.length + " tokens.")
   instate.ast = result;
+  instate.parsed = true;
   return result;
 }
 

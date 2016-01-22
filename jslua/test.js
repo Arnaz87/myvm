@@ -1,14 +1,6 @@
 const fs = require('fs');
 const state = require("./parse_state.js");
-const lexer = require("./lexer.js");
-const parser = require("./parser.js");
-
-function parse (str) {
-  var st = state.state(str);
-  lexer.tokenize(st);
-  parser.parse(st);
-  return st;
-}
+const processor = require("./processor.js");
 
 // process.argv contiene argumentos.
 // argv[0]: 'node'
@@ -31,7 +23,7 @@ fs.readFile(infile, 'utf8', function (err, data) {
     process.exit();
   }
   console.log(JSON.stringify(data));
-  var state = parse(data);
+  var state = processor.process(data);
   console.log(state.tostr());
   var json = JSON.stringify(state.ast, null, 2);
   fs.writeFile(outfile, json);

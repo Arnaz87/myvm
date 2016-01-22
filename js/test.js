@@ -17,13 +17,13 @@ var mod = {
     [Iloadstr, "str1", "Start Value:"],
     [Iloadstr, "str2", "End Value:"],
 
-    [Iloadi, "x", 5],
+    [Iloadi, "x", 6],
     [Iloadi, "y", 5],
     [Isetarg, "str1", 0], [Icall, "print"],
     [Isetarg, "x", 0], [Icall, "print"],
     [Isetarg, "y", 0], [Icall, "print"],
 
-    [Imodule, "run", "Main", "add"],
+    [Imodule, "run", "Main", "mult"],
     [Isetarg, "x", 0], [Isetarg, "y", 1],
 
     [Icall, "run"],
@@ -91,6 +91,6 @@ var mod = {
     console.log("\n");
   }
 }
-M.debug = 50;
+M.debug = 0;
 m.load(mod);
 m.run();

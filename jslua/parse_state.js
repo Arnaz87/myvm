@@ -45,6 +45,10 @@ function capitalize (str) {
 function state (input) {
   return {
     input: input,
+    tokenized: false,
+    parsed: false,
+    compiled: false,
+    refined: false,
     fail: function (msg, pos, type) {
       console.log(this.tostr());
       var isparser = type == "parser";
