@@ -1,9 +1,37 @@
 // Analizador Léxico de Lua
 
-function token (type, val, matchlen) {
+function get_fail_lines (str, pos) {
+  var startpos = pos;
+  var endpos = pos;
+  var inpos;
+  while (startpos > 0) {
+    if (str[startpos] == '\n') {
+      startpos = pos + 1;
+      break;
+    }
+    startpos--;
+  }
+  while (endpos > 0) {
+    if (str[endpos] == '\n') {
+      endpos = pos;
+      break;
+    }
+    endpos--;
+  }
+  var inpos = (pos+1)-startpos;
+  var pointer = "";
+  for (var i = 0; i < inpos; i++) {
+    pointer += " ";
+  };
+  pointer += "^";
+  return [str.slice(startpos, endpos), pointer];
+}
+
+function token (type, val, pos) {
   return {
     type: type,
-    match: val
+    match: val,
+    pos: pos
   };
 }
 
@@ -19,41 +47,41 @@ function startsWithAny (str, prefixes) {
   return null;
 }
 
-function tryRegex (str, inregex, type) {
-  var regex = RegExp('^' + inregex.source);
-  var match = regex.exec(str);
-  if (match == null) return null;
-  return token(type, match[0]);
-}
-
-function tryAny (str, words, type) {
-  var match = startsWithAny(str, words);
-  if (match == null) { return null; }
-  return token(type, match, match.length);
-}
-
 function tokenize (input) {
   var left = input;
   var tokens = [];
-  function consume (len) {
-    left = left.slice(len);
+  function fail (msg) {
+    var pos = (input.length-left.length);
+    var lines = get_fail_lines(input, pos);
+    var str = "Lexer Error: Token Irreconocible.\nat: " + pos;
+    str += '\n' + lines[0] + '\n' + lines[1];
+    console.log(input);
+    console.log(tokens);
+    throw new Error(str);
   }
+  function consume (len) { left = left.slice(len); }
+  function getpos () { return input.length - left.length; }
   function consume_space () {
     var regex = /[\ \t]*/; // No se consume las nuevas líneas.
     var match = regex.exec(left);
     if (match) { consume(match[0].length); }
   }
-  function mtry (tkn) {
-    if (tkn == null) { return false; }
+  function mRegex (rgx, type) {
+    var regex = RegExp('^' + rgx.source);
+    var match = regex.exec(left);
+    if (match == null) return false;
+    var tkn = token(type, match[0], getpos());
     tokens.push(tkn);
     consume(tkn.match.length);
     return true;
   }
-  function mRegex (rgx, type) {
-    return mtry(tryRegex(left, rgx, type));
-  }
   function mAny (words, type) {
-    return mtry(tryAny(left, words, type));
+    var match = startsWithAny(left, words);
+    if (match == null) return false;
+    var tkn = token(type, match, getpos());
+    tokens.push(tkn);
+    consume(tkn.match.length);
+    return true;
   }
 
   var numrgx = /[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?/;
@@ -82,12 +110,16 @@ function tokenize (input) {
     if (mRegex(numrgx, "num")) continue;
     if (mRegex(varrgx, "var")) continue;
     if (mAny(grammar, "gmr")) continue;
-    throw new Error("Lexer Error: Token Irreconocible.\nat: " + (input.length-left.length));
+    fail("Lexer Error: Token Irreconocible");
   }
   return tokens;
 }
 
 exports.tokenize = tokenize;
+
+// Hay un error con este lexer, "ifyolo" devuelve "if" separado de "yolo",
+// en vez de considerarlo todo como un solo
+
 /*
 var lexer = require("./lexer.js"); var T = lexer.tokenize;
 lexer.tokenize("3 4 5")
