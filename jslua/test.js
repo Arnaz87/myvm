@@ -1,8 +1,14 @@
 const fs = require('fs');
+const state = require("./parse_state.js");
 const lexer = require("./lexer.js");
 const parser = require("./parser.js");
 
-function parse (str) { return parser.parse(lexer.tokenize(str)); }
+function parse (str) {
+  var st = state.state(str);
+  lexer.tokenize(st);
+  parser.parse(st);
+  return st;
+}
 
 // process.argv contiene argumentos.
 // argv[0]: 'node'
@@ -25,8 +31,9 @@ fs.readFile(infile, 'utf8', function (err, data) {
     process.exit();
   }
   console.log(JSON.stringify(data));
-  var ast = parse(data);
-  var json = JSON.stringify(ast, null, 2);
+  var state = parse(data);
+  console.log(state.tostr());
+  var json = JSON.stringify(state.ast, null, 2);
   fs.writeFile(outfile, json);
 });
 

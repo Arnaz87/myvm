@@ -1,0 +1,130 @@
+{
+  "type": "seq",
+  "seq": [
+    {
+      "type": "assign",
+      "var": {
+        "type": "var",
+        "value": "xul"
+      },
+      "val": {
+        "type": "num",
+        "value": 3
+      }
+    },
+    {
+      "type": "assign",
+      "var": {
+        "type": "var",
+        "value": "y"
+      },
+      "val": {
+        "type": "num",
+        "value": 2
+      }
+    },
+    {
+      "type": "if",
+      "cond": {
+        "type": "binop",
+        "op": "==",
+        "left": {
+          "type": "var",
+          "value": "x"
+        },
+        "right": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "block": {
+        "type": "seq",
+        "seq": [
+          {
+            "type": "assign",
+            "var": {
+              "type": "var",
+              "value": "z"
+            },
+            "val": {
+              "type": "call",
+              "var": {
+                "type": "var",
+                "value": "sqrt"
+              },
+              "args": [
+                {
+                  "type": "binop",
+                  "op": "+",
+                  "left": {
+                    "type": "var",
+                    "value": "x"
+                  },
+                  "right": {
+                    "type": "var",
+                    "value": "y"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "call",
+            "var": {
+              "type": "var",
+              "value": "print"
+            },
+            "args": [
+              {
+                "type": "binop",
+                "op": "+",
+                "left": {
+                  "type": "binop",
+                  "op": "+",
+                  "left": {
+                    "type": "var",
+                    "value": "z"
+                  },
+                  "right": {
+                    "type": "var",
+                    "value": "x"
+                  }
+                },
+                "right": {
+                  "type": "var",
+                  "value": "y"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "else": {
+        "type": "seq",
+        "seq": [
+          {
+            "type": "call",
+            "var": {
+              "type": "var",
+              "value": "print"
+            },
+            "args": [
+              {
+                "type": "binop",
+                "op": "-",
+                "left": {
+                  "type": "var",
+                  "value": "x"
+                },
+                "right": {
+                  "type": "var",
+                  "value": "y"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

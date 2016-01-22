@@ -1,5 +1,7 @@
 // Analizador Léxico de Lua
 
+const pstate = require("./parse_state.js");
+
 function get_fail_lines (str, pos) {
   var startpos = pos;
   var endpos = pos;
@@ -47,17 +49,12 @@ function startsWithAny (str, prefixes) {
   return null;
 }
 
-function tokenize (input) {
+function tokenize (instate) {
+  var input = instate.input;
   var left = input;
   var tokens = [];
   function fail (msg) {
-    var pos = (input.length-left.length);
-    var lines = get_fail_lines(input, pos);
-    var str = "Lexer Error: Token Irreconocible.\nat: " + pos;
-    str += '\n' + lines[0] + '\n' + lines[1];
-    console.log(input);
-    console.log(tokens);
-    throw new Error(str);
+    instate.fail(msg, input.length-left.length, "lexer");
   }
   function consume (len) { left = left.slice(len); }
   function getpos () { return input.length - left.length; }
@@ -71,17 +68,25 @@ function tokenize (input) {
     var match = regex.exec(left);
     if (match == null) return false;
     var tkn = token(type, match[0], getpos());
-    tokens.push(tkn);
-    consume(tkn.match.length);
-    return true;
+    return tkn;
   }
   function mAny (words, type) {
     var match = startsWithAny(left, words);
     if (match == null) return false;
     var tkn = token(type, match, getpos());
-    tokens.push(tkn);
-    consume(tkn.match.length);
-    return true;
+    return tkn;
+  }
+  function pickLonger (toks) {
+    // Devuelve el token más largo de la lista.
+    // Si dos son del mismo largo, se elige el primero.
+    var longer = null;
+    for (var i = 0; i < toks.length; i++) {
+      var tok = toks[i];
+      if (longer == null || tok.match.length > longer.match.length) {
+        longer = tok;
+      }
+    };
+    return longer;
   }
 
   var numrgx = /[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?/;
@@ -103,15 +108,21 @@ function tokenize (input) {
       consume(1);
       continue;
     }
-    if (mAny(stmts, "stmt")) continue;
-    if (mAny(cons, "const")) continue;
-    if (mAny(kws, "kw")) continue;
-    if (mAny(ops, "op")) continue;
-    if (mRegex(numrgx, "num")) continue;
-    if (mRegex(varrgx, "var")) continue;
-    if (mAny(grammar, "gmr")) continue;
-    fail("Lexer Error: Token Irreconocible");
+    var toks = [];
+    function mpush (x) {if (x) {toks.push(x)}}
+    mpush(mAny(stmts, "stmt"));
+    mpush(mAny(cons, "const"));
+    mpush(mAny(kws, "kw"));
+    mpush(mAny(ops, "op"));
+    mpush(mRegex(numrgx, "num"));
+    mpush(mRegex(varrgx, "var"));
+    mpush(mAny(grammar, "gmr"));
+    var tkn = pickLonger(toks);
+    if (tkn == null) fail("Lexer Error: Token Irreconocible");
+    tokens.push(tkn);
+    consume(tkn.match.length);
   }
+  instate.tokens = tokens;
   return tokens;
 }
 

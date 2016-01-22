@@ -1,4 +1,9 @@
-function parse (tokens) {
+// Analizador Sintáctico de Lua
+
+const pstate = require("./parse_state.js");
+
+function parse (instate) {
+  var tokens = instate.tokens;
   // Token State
   var pos = 0;
   function peek (i) {
@@ -13,7 +18,7 @@ function parse (tokens) {
   }
   function eof() {return pos >= tokens.length;}
   function fail (txt) {
-    throw new Error("Parse Error: " + txt + " at:" + ((eof())? "End of File!":peek().pos));
+    instate.fail(txt, eof()?"eof":peek().pos, "parser");
   }
   function fail_if (x, txt) { if (x) { fail(txt); } }
   function fail_ifn (x, txt) { fail_if(!x, txt); }
@@ -56,11 +61,15 @@ function parse (tokens) {
   var binops = {
     "or": 1,
     "and": 2,
-    "+": 3,
-    "-": 3,
-    "*": 4,
-    "/": 4,
-    "**": 5
+    "<":  3, ">":  3,
+    "<=": 3, ">=": 3,
+    "~=": 3, "==": 3, // prefiero != a ~=
+    "..": 4, // prefiero ++
+    "+": 5,
+    "-": 5,
+    "*": 6,
+    "/": 6,
+    "**": 7
   }
   var unops = {
     "not": 2,
@@ -198,7 +207,7 @@ function parse (tokens) {
   function parse_if () {
     if (!try_kw("if")) return null;
     var cond = fail_null(parse_exp(), "Expected an if condition expression");
-    fail_if(!try_kw("do"), "Expected block do keyword");
+    fail_if(!try_kw("then"), "Expected block then keyword");
     var block = fail_null(parse_seq(), "Expected an if block")
     var elseb = nil_const;
     if (try_kw("else")) {
@@ -275,6 +284,7 @@ function parse (tokens) {
 
   var result = parse_seq();
   console.log("Parser consumed " + pos + " of " + tokens.length + " tokens.")
+  instate.ast = result;
   return result;
 }
 
@@ -299,7 +309,7 @@ exp := unop exp
 
 assign := var { "," var } "=" explist
 
-ifstat := "if" exp "do" block ["else" block] "end"
+ifstat := "if" exp "then" block ["else" block] "end"
 whilestat := "while" exp "do" block "end"
 forstat := "for" name "," name "in" exp "do" block "end"
 

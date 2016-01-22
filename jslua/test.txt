@@ -1,6 +1,8 @@
 xul = 3
 y = 2
-if (x == 3) do
+if (x == true) then
   z = sqrt(x + y)
   print(z + x + y)
+else
+  print(x-y)
 end
