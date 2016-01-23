@@ -18,34 +18,47 @@ function exec (inst) {
     M.state.pc = inst[i];
     advance = false;
   }
+  function jumpto (name) {
+    var lbl = M.state.labels[name];
+    //console.log("jumping to " + name + ": " + lbl);
+    if (lbl === null || lbl === undefined) {
+      throw new Error("Undefined label: " + name);
+    }
+    M.state.pc = lbl;
+    advance = false;
+  }
   switch (inst[0]) {
-    case Iadd: sR(1, gR(2) + gR(3)); break;
-    case Isub: sR(1, gR(2) - gR(3)); break;
-    case Imul: sR(1, gR(2) * gR(3)); break;
-    case Idiv: sR(1, gR(2) / gR(3)); break;
-    case Imod: sR(1, gR(2) % gR(3)); break;
-    case Iinc: sR(1, gR(1) + 1); break;
-    case Idec: sR(1, gR(1) - 1); break;
+    case "mov": sR(1, gR(2)); break;
+    case "add": sR(1, gR(2) + gR(3)); break;
+    case "sub": sR(1, gR(2) - gR(3)); break;
+    case "mul": sR(1, gR(2) * gR(3)); break;
+    case "div": sR(1, gR(2) / gR(3)); break;
+    case "mod": sR(1, gR(2) % gR(3)); break;
+    case "inc": sR(1, gR(1) + 1); break;
+    case "dec": sR(1, gR(1) - 1); break;
 
-    case Isetarg: M.args[inst[2]]=gR(1); break;
-    case Igetarg: sR(1,M.args[inst[2]]); break;
+    case "setarg": M.args[inst[2]]=gR(1); break;
+    case "getarg": sR(1,M.args[inst[2]]); break;
 
-    case Ieq: sR(1, gR(2) == gR(3)); break;
-    case Ilt: sR(1, gR(2) < gR(3)); break;
-    case Ilteq: sR(1, gR(2) <= gR(3)); break;
-    case Igtz: sR(1, gR(2) > 0); break;
+    case "eq": sR(1, gR(2) == gR(3)); break;
+    case "lt": sR(1, gR(2) < gR(3)); break;
+    case "lteq": sR(1, gR(2) <= gR(3)); break;
+    case "gtz": sR(1, gR(2) > 0); break;
 
-    case Iloadi: sR(1, inst[2]); break;
-    case Icall: docall = true; break;
+    //case "loadi": sR(1, inst[2]); break;
+    case "call": docall = true; break;
 
-    case Ijump: setpc(1); break;
-    case Ijumpif: if (gR(2)) { setpc(1) }; break;
-    case Ijumpifn: if (!gR(2)) { setpc(1) }; break;
+    case "jump": jumpto(inst[1]); break;
+    case "jumpif": if (gR(2)) { jumpto(inst[1]) }; break;
+    case "jumpifn": if (!gR(2)) { jumpto(inst[1]) }; break;
 
-    case Iloadstr: sR(1, inst[2]); break;
-    case Iprint: console.log(gR(1)); break;
-    case Imodule: sR(1, M.modules[inst[2]][inst[3]]); break;
-    case Iend: M.endFunc(); advance=false; break;
+    //case "loadstr": sR(1, inst[2]); break;
+    case "print": console.log(gR(1)); break;
+    case "module": sR(1, M.modules[inst[2]][inst[3]]); break;
+    case "label": break;
+    case "end": M.endFunc(); advance=false; break;
+    case "loadval": sR(1, inst[2]); break; // Por ahora este en vez de loadi...
+    default: throw new Error("Unrecognized instruction: " + inst[0]);
   }
   if (advance) {
     M.state.pc++;
@@ -55,11 +68,23 @@ function exec (inst) {
   }
 }
 
+function compileLabels () {
+  M.state.labels = {};
+  for (var i = 0; i < M.state.code.length; i++) {
+    var inst = M.state.code[i]
+    if (inst[0] == "label") {
+      M.state.labels[inst[1]] = i;
+    }
+  };
+  //console.log(M.state.labels);
+}
+
 function mcall (fun, len) {
   if (typeof fun == "function") {
     fun();
   } else {
     M.loadFunc(fun);
+    compileLabels();
   }
 }
 

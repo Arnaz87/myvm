@@ -1,0 +1,63 @@
+tokens:
+  {"type":"var","match":"x","pos":0}
+  {"type":"gmr","match":"=","pos":2}
+  {"type":"str","match":"\"hola \\\"m\\undo\\\" :D!\"","pos":4}
+  {"type":"nl","match":"\n"}
+  {"type":"var","match":"y","pos":26}
+  {"type":"gmr","match":"=","pos":28}
+  {"type":"num","match":"0","pos":30}
+  {"type":"nl","match":"\n"}
+  {"type":"var","match":"print","pos":32}
+  {"type":"gmr","match":"(","pos":37}
+  {"type":"var","match":"x","pos":38}
+  {"type":"gmr","match":")","pos":39}
+  {"type":"nl","match":"\n"}
+syntax tree:
+{
+  "type": "seq",
+  "seq": [
+    {
+      "type": "assign",
+      "var": {
+        "type": "var",
+        "value": "x"
+      },
+      "val": {
+        "type": "str",
+        "value": "hola \"m\\undo\" :D!"
+      }
+    },
+    {
+      "type": "assign",
+      "var": {
+        "type": "var",
+        "value": "y"
+      },
+      "val": {
+        "type": "num",
+        "value": 0
+      }
+    },
+    {
+      "type": "call",
+      "var": {
+        "type": "var",
+        "value": "print"
+      },
+      "args": [
+        {
+          "type": "var",
+          "value": "x"
+        }
+      ]
+    }
+  ]
+}
+code:
+  ["loadval","_temp_0","hola \"m\\undo\" :D!"]
+  ["mov","x","_temp_0"]
+  ["loadval","_temp_1",0]
+  ["mov","y","_temp_1"]
+  ["setarg","x",0]
+  ["call","print",1]
+  ["getarg","_temp_2",0]

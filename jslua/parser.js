@@ -130,9 +130,9 @@ function parse (instate) {
     if (tok.type != "str") return null;
     consume();
     var val = tok.match.slice(1,-1); // Eliminar el primer y el último caracter. En este caso las comillas.
-    val = val.replace(/\\"/, '"');
-    val = val.replace(/\\'/, "'"); // Reemplazar las secuencias de escape.
-    return {type: "str", val: val};
+    val = val.replace(/\\"/g, '"');
+    val = val.replace(/\\'/g, "'"); // Reemplazar las secuencias de escape.
+    return {type: "str", value: val};
   }
   function parse_nil () {
     var tok = peek();
@@ -287,7 +287,9 @@ function parse (instate) {
   }
 
   var result = parse_seq();
-  console.log("Parser consumed " + pos + " of " + tokens.length + " tokens.")
+  if (!eof()) {
+    fail("Failed consuming all of the tokens");
+  }
   instate.ast = result;
   instate.parsed = true;
   return result;

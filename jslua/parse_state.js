@@ -76,6 +76,14 @@ function state (input) {
       if (this.ast) {
         str += "syntax tree:\n";
         str += JSON.stringify(this.ast, null, 2);
+        str += "\n";
+      }
+      if (this.code) {
+        str += "code:\n";
+        for (var i = 0; i < this.code.length; i++) {
+          var inst = this.code[i];
+          str += "  " + JSON.stringify(inst) + "\n";
+        };
       }
       return str;
     }

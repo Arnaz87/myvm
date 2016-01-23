@@ -1,8 +1,3 @@
-xul = 3
-y = 2
-if (x == true) then
-  z = sqrt(x + y)
-  print(z + x + y)
-else
-  print(x-y)
-end
+x = "hola \"m\undo\" :D!"
+y = 0
+print(x)

@@ -54,11 +54,10 @@ function compile (instate) {
 
   function compile_const (ast) {
     var name = state.get_temp();
-    state.code.push(["loadi", name, ast.value]);
+    state.code.push(["loadval", name, ast.value]);
     return name;
   }
   function compile_binop (ast) {
-    console.log(ast);
     var op = ops[ast.op];
     var name = state.get_temp();
     var left = compile_value(ast.left);
@@ -115,6 +114,25 @@ function compile (instate) {
     state.code.push(["label", l_end]);
     return result;
   }
+  function compile_call (ast) {
+    var fun = compile_value(ast.var);
+    var result = state.get_temp();
+    var args = []
+    for (var i = 0; i < ast.args.length; i++) {
+      var arg = ast.args[i];
+      var val = compile_value(arg);
+      args.push({val: val, i: i});
+    };
+    // Tengo que crear las instrucciones en un bucle separado porque alguno
+    // de los argumentos podría llamar funciones y cambiar los argumentos.
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
+      state.code.push(["setarg", arg.val, arg.i]);
+    };
+    state.code.push(["call", fun, ast.args.length]);
+    state.code.push(["getarg", result, 0]);
+    return result;
+  }
   function compile_seq (ast) {
     var seq = ast.seq;
     var last = null;
@@ -141,6 +159,8 @@ function compile (instate) {
         return compile_if(ast);
       case "while":
         return compile_while(ast);
+      case "call":
+        return compile_call(ast);
     }
   }
 

@@ -95,6 +95,7 @@ function tokenize (instate) {
 
   var numrgx = /[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?/;
   var varrgx = /[a-z][a-zA-Z0-9]*/;
+  var strrgx = /\"([^\\^\"]|\\.)*\"/;
   var kws = ["do", "else", "elseif", "end", "for", "function", "if", "in",
              "repeat", "then", "until", "while"];
   var stmts = ["local", "break", "return"];
@@ -120,6 +121,7 @@ function tokenize (instate) {
     mpush(mAny(ops, "op"));
     mpush(mRegex(numrgx, "num"));
     mpush(mRegex(varrgx, "var"));
+    mpush(mRegex(strrgx, "str"));
     mpush(mAny(grammar, "gmr"));
     var tkn = pickLonger(toks);
     if (tkn == null) fail("Lexer Error: Token Irreconocible");

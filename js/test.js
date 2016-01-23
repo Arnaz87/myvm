@@ -5,76 +5,80 @@ var out = [];
 var mod = {
   name: "Main",
   mainx: [
-    [Iloadstr, "text", "Hola Mundo!"],
-    [Imodule, "print", "Main", "myprint"],
-    [Isetarg, "text", 0],
-    [Icall, "print"],
-    //[Iprint, "text"],
-    [Iend]
+    ["loadval", "text", "Hola Mundo!"],
+    ["module", "print", "Main", "myprint"],
+    ["setarg", "text", 0],
+    ["call", "print"],
+    //["print", "text"],
+    ["end"]
   ],
   main: [
-    [Imodule, "print", "Main", "print"],
-    [Iloadstr, "str1", "Start Value:"],
-    [Iloadstr, "str2", "End Value:"],
+    ["module", "print", "Main", "print"],
+    ["loadval", "str1", "Start Value:"],
+    ["loadval", "str2", "End Value:"],
 
-    [Iloadi, "x", 6],
-    [Iloadi, "y", 5],
-    [Isetarg, "str1", 0], [Icall, "print"],
-    [Isetarg, "x", 0], [Icall, "print"],
-    [Isetarg, "y", 0], [Icall, "print"],
+    ["loadval", "x", 6],
+    ["loadval", "y", 5],
+    ["setarg", "str1", 0], ["call", "print"],
+    ["setarg", "x", 0], ["call", "print"],
+    ["setarg", "y", 0], ["call", "print"],
 
-    [Imodule, "run", "Main", "mult"],
-    [Isetarg, "x", 0], [Isetarg, "y", 1],
+    ["module", "run", "Main", "mult"],
+    ["setarg", "x", 0], ["setarg", "y", 1],
 
-    [Icall, "run"],
+    ["call", "run"],
 
-    [Igetarg, "z", 0],
-    [Isetarg, "str2", 0], [Icall, "print"],
-    [Isetarg, "z", 0], [Icall, "print"],
+    ["getarg", "z", 0],
+    ["setarg", "str2", 0], ["call", "print"],
+    ["setarg", "z", 0], ["call", "print"],
 
-    //[Imodule, "end", "Main", "end"], [Icall, "end"],
-    [Iend]
+    //["module", "end", "Main", "end"], ["call", "end"],
+    ["end"]
   ],
   mult: [
-    [Imodule, "add", "Main", "add"],
-    [Igetarg, "n", 0], // line 1
-    [Igetarg, "m", 1],
-    [Imov, "r", "n"],
-    [Igtz, "cond", "m"], // line 4
-    [Ijumpifn, 12, "cond"],
-    [Isetarg, "n", 0],
-    [Isetarg, "r", 1],
-    [Icall, "add"],
-    [Igetarg, "r", 0],
-    [Idec, "m"],
-    [Ijump, 4],
-    [Isetarg, "r", 0], // line 12
-    [Iend]
+    ["module", "add", "Main", "add"],
+    ["getarg", "n", 0],
+    ["getarg", "m", 1],
+    ["mov", "r", "n"],
+    ["label", "start"], // label
+    ["gtz", "cond", "m"],
+    ["jumpifn", "end", "cond"],
+    ["setarg", "n", 0],
+    ["setarg", "r", 1],
+    ["call", "add"],
+    ["getarg", "r", 0],
+    ["dec", "m"],
+    ["jump", "start"],
+    ["label", "end"], // label
+    ["setarg", "r", 0],
+    ["end"]
   ],
   add: [
-    [Igetarg, "n", 0], // line 0
-    [Igetarg, "m", 1],
-    [Igtz, "cond", "m"], // line 2
-    [Ijumpifn, 7, "cond"],
-    [Iinc, "n"],
-    [Idec, "m"],
-    [Ijump, 2],
-    [Isetarg, "n", 0], // line 7
-    [Iend]
+    ["getarg", "n", 0],
+    ["getarg", "m", 1],
+    ["label", "start"], // label
+    ["gtz", "cond", "m"],
+    ["jumpifn", "end", "cond"],
+    ["inc", "n"],
+    ["dec", "m"],
+    ["jump", "start"],
+    ["label", "end"], // label
+    ["setarg", "n", 0],
+    ["end"]
   ],
   add1: [
-    [Iloadi, "one", 1],
-    [Igetarg, "x", 0],
-    [Iadd, "result", "one", "x"],
-    [Isetarg, "result", 0],
-    [Iend]
+    ["loadval", "one", 1],
+    ["getarg", "x", 0],
+    ["add", "result", "one", "x"],
+    ["setarg", "result", 0],
+    ["end"]
   ],
   myprint: [
-    [Iloadstr, "test", "Imprimiendo..."],
-    [Igetarg, "text", 0],
-    [Iprint, "test"],
-    [Iprint, "text"],
-    [Iend]
+    ["loadval", "test", "Imprimiendo..."],
+    ["getarg", "text", 0],
+    ["print", "test"],
+    ["print", "text"],
+    ["end"]
   ],
   setDebug: function () {
     M.debug = (M.args[0]);
