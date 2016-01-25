@@ -1,63 +1,120 @@
 tokens:
-  {"type":"var","match":"x","pos":0}
-  {"type":"gmr","match":"=","pos":2}
-  {"type":"str","match":"\"hola \\\"m\\undo\\\" :D!\"","pos":4}
-  {"type":"nl","match":"\n"}
-  {"type":"var","match":"y","pos":26}
+  {"type":"var","match":"table","pos":0}
+  {"type":"gmr","match":"=","pos":6}
+  {"type":"gmr","match":"{","pos":8}
+  {"type":"var","match":"a","pos":9}
+  {"type":"gmr","match":"=","pos":10}
+  {"type":"num","match":"1","pos":11}
+  {"type":"gmr","match":",","pos":12}
+  {"type":"var","match":"b","pos":13}
+  {"type":"gmr","match":"=","pos":14}
+  {"type":"num","match":"2","pos":15}
+  {"type":"gmr","match":",","pos":16}
+  {"type":"gmr","match":"[","pos":17}
+  {"type":"str","match":"\"c\"","pos":18}
+  {"type":"gmr","match":"]","pos":21}
+  {"type":"gmr","match":"=","pos":22}
+  {"type":"num","match":"3","pos":23}
+  {"type":"gmr","match":",","pos":24}
+  {"type":"gmr","match":"[","pos":25}
+  {"type":"var","match":"d","pos":26}
+  {"type":"gmr","match":"]","pos":27}
   {"type":"gmr","match":"=","pos":28}
-  {"type":"num","match":"0","pos":30}
-  {"type":"nl","match":"\n"}
-  {"type":"var","match":"print","pos":32}
-  {"type":"gmr","match":"(","pos":37}
-  {"type":"var","match":"x","pos":38}
-  {"type":"gmr","match":")","pos":39}
-  {"type":"nl","match":"\n"}
+  {"type":"num","match":"4","pos":29}
+  {"type":"gmr","match":",","pos":30}
+  {"type":"num","match":"7","pos":31}
+  {"type":"gmr","match":",","pos":32}
+  {"type":"num","match":"8","pos":33}
+  {"type":"gmr","match":",","pos":34}
+  {"type":"num","match":"9","pos":35}
+  {"type":"gmr","match":"}","pos":36}
 syntax tree:
 {
-  "type": "seq",
+  "type": "block",
   "seq": [
     {
       "type": "assign",
-      "var": {
-        "type": "var",
-        "value": "x"
-      },
-      "val": {
-        "type": "str",
-        "value": "hola \"m\\undo\" :D!"
-      }
-    },
-    {
-      "type": "assign",
-      "var": {
-        "type": "var",
-        "value": "y"
-      },
-      "val": {
-        "type": "num",
-        "value": 0
-      }
-    },
-    {
-      "type": "call",
-      "var": {
-        "type": "var",
-        "value": "print"
-      },
-      "args": [
+      "vars": [
         {
           "type": "var",
-          "value": "x"
+          "name": "table"
+        }
+      ],
+      "exps": [
+        {
+          "type": "table",
+          "fields": [
+            {
+              "type": "field",
+              "name": {
+                "type": "str",
+                "value": "a"
+              },
+              "value": {
+                "type": "num",
+                "value": 1
+              }
+            },
+            {
+              "type": "field",
+              "name": {
+                "type": "str",
+                "value": "b"
+              },
+              "value": {
+                "type": "num",
+                "value": 2
+              }
+            },
+            {
+              "type": "field",
+              "name": {
+                "type": "str",
+                "value": "c"
+              },
+              "value": {
+                "type": "num",
+                "value": 3
+              }
+            },
+            {
+              "type": "field",
+              "name": {
+                "type": "var",
+                "name": "d"
+              },
+              "value": {
+                "type": "num",
+                "value": 4
+              }
+            },
+            {
+              "type": "field",
+              "name": null,
+              "value": {
+                "type": "num",
+                "value": 7
+              }
+            },
+            {
+              "type": "field",
+              "name": null,
+              "value": {
+                "type": "num",
+                "value": 8
+              }
+            },
+            {
+              "type": "field",
+              "name": null,
+              "value": {
+                "type": "num",
+                "value": 9
+              }
+            }
+          ]
         }
       ]
     }
   ]
 }
-code:
-  ["loadval","_temp_0","hola \"m\\undo\" :D!"]
-  ["mov","x","_temp_0"]
-  ["loadval","_temp_1",0]
-  ["mov","y","_temp_1"]
-  ["setarg","x",0]
-  ["call","print",1]
-  ["getarg","_temp_2",0]

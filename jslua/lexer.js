@@ -63,7 +63,8 @@ function tokenize (instate) {
   function consume (len) { left = left.slice(len); }
   function getpos () { return input.length - left.length; }
   function consume_space () {
-    var regex = /[\ \t]*/; // No se consume las nuevas líneas.
+    //var regex = /[\ \t]*/; // No se consume las nuevas líneas.
+    var regex = /\s*/;
     var match = regex.exec(left);
     if (match) { consume(match[0].length); }
   }
@@ -102,17 +103,17 @@ function tokenize (instate) {
   var cons = ["true", "false", "nil", "..."];
   var ops = ["+", "-", "*", "/", "%", "^", "<", ">", "==", "<=", ">=", "~=",
              "and", "or", "not", "..", "#"];
-  var grammar = ["[", "]", "{", "}", "(", ")", ".", ",", "="];
+  var grammar = [";", "[", "]", "{", "}", "(", ")", ".", ",", "="];
 
   var count = 100;
   while (left.length > 0 && count > 0) {
     count--;
     consume_space();
-    if (left[0] == "\n" || left[0] == ";") {
+    /*if (left[0] == "\n" || left[0] == ";") {
       tokens.push(token("nl", left[0]));
       consume(1);
       continue;
-    }
+    }*/
     var toks = [];
     function mpush (x) {if (x) {toks.push(x)}}
     mpush(mAny(stmts, "stmt"));

@@ -30,8 +30,8 @@ fs.readFile(infile, 'utf8', function (err, data) {
   //console.log(state.tostr());
   console.log("Writing data to " + outfile);
   fs.writeFile(outfile, state.tostr());
-  console.log("Ejecutar");
-  execute(state);
+  /*console.log("Ejecutar");
+  execute(state);*/
 });
 
 function execute (state) {
