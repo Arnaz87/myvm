@@ -17,8 +17,11 @@ if (process.argv[2] == "-h") {
   proces.exit();
 }
 
-var infile = process.argv[2];
-var outfile = process.argv[3];
+//var infile = process.argv[2];
+//var outfile = process.argv[3];
+
+var infile = "test.lua";
+var outfile = "test.json";
 
 fs.readFile(infile, 'utf8', function (err, data) {
   if (err) {

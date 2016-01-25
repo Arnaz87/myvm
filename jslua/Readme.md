@@ -3,9 +3,9 @@
 Una implementación de Lua para probar las características de la máquina virtual.
 
 Para correr la implementación, ejecutar "test.js" en Node JS. El script lee el
-contenido de "input.txt" y escribe los datos que logró sacar, esos son los
-tokens, el arbol de sintaxis (AST) y el bytecode (en el formato del interprete
-de prueba, que es una lista json con las instrucciones)
+contenido de "test.lua" y escribe los datos que logró sacar en "test.json",
+esos son los tokens, el arbol de sintaxis (AST) y el bytecode (en el formato
+del interprete de prueba, que es una lista con las instrucciones)
 
 Uso estas referencias para la sintaxis de Lua:
 
@@ -28,7 +28,8 @@ Ahora debo trabajar en el parser para funciones.
 El lexer ejecuta todos los tipos de tokens y selecciona el resultado más largo.
 Si tiene "els", "else" y "elsex", los interpreta correctamente como variable,
 palabra clave y variable, respectivamente. "....." resulta en un vararg seguido
-de una concatenación y ".. ..." en lo contrario.
+de una concatenación, y ".. ...." resulta en una concatenación, seguido de
+vararg, seguido de un punto gramático.
 
 ## Parser
 
@@ -50,21 +51,19 @@ campo hay que revisar el tipo del resultado de ese módulo.
 de invocación de función, así que tuve que hacer el mismo parser que considere
 ambos tipos a la vez. Al fin y al cabo ambos son sentencias así que no es mucho
 problema tampoco.
-* Soporta las sentencias de control de flujo if (faltan los elseif) y while.
-Faltan repeat, do y ambos for, el numérico y el iterador.
+* Soporta las sentencias de control de flujo if (sin elseif), while y for
+numérico. Faltan repeat, do y for genérico.
+* Tiene las sentencias return y break, por la sintaxis de lua solo es legal
+ponerlo al final de un bloque.
+* Soporta funciones, con nombres y anónimas. "function x (a) b end" traduce a
+"x = function (a) b end" en el árbol sintáctico.
 
 * Faltan scopes para asignación de variables.
-* Falta definición de funciones, ambas, anónimas y con nombre. Esta es la
-prioridad ahorita.
-
-* No entiendo las sentencias return y break, segun la referencia solo pueden
-aparecer como última sentencia en un bloque... ¿break solo al final de un bloque?
-DAFUQ! Qué pinche sentido tiene eso?
-* . . . en realidad ya entiendo, un bloque es un if o un while, no tiene mucho
-sentido poner un return en medio de una secuencia de instrucciones e ignorar
-todas las que están por delante, solo tiene sentido si se puede obviar la
-sentencia de algun modo, como con un if, que en ese caso estaría al final del
-bloque del if pero no al final de la función necesariamente.
+* Lua oficial puede usar expresiones entre paréntesis como objetos, se pueden
+ejecutar y se pueden acceder a campos de ellas, pero no deja asignarlas como
+variables. Esta versión no permite hacer eso, fue dificil de implementar. Eso
+quiere decir que no puedo concatenar dos strings y luego acceder a sus
+caracteres, solo se puede si antes guardo el string resultante en una variable.
 
 
 ## Compilador

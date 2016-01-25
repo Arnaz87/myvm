@@ -38,57 +38,60 @@ Los comentarios son con # hasta el final de la línea. Los largos son con ###
 hasta le siguiente ###. No hay operador de longitud como en lua, para eso se
 usa el método length.
 
-x=2;y=3
-x,y=2,3
-(x=2) == 2
-x.c == x["c"]
-x.c != x[c]
-x.&c == x.c
-x.f = () -> 3
-x.f == 3
-x.f != () -> 3
-x.&f == () -> 3
-f = (a, b) -> a+b
-f(2,3) == 2+3
-f 2, 3 == f(2,3)
-f 2 3 == f(2(3)) # error, 2 no es función
-f g x == f(g(x)) # esto sí es correcto
-f 2 == f(2)
-f = (a) -> a+1
-(f x = 2) == f(x=2)
-(f;x = 2) == f(); (x=2)
-  # (f g x) podría traducir a f(g)(x), pero haskell y coffeescript traducen a
-  # f(g(x)), y como lo usa coffee, lo usaré yo, además fue lo primero que pensé.
+    x=2;y=3
+    x,y=2,3
+    (x=2) == 2
+    x.c == x["c"]
+    x.c != x[c]
+    x.&c == x.c
+    x.f = () -> 3
+    x.f == 3
+    x.f != () -> 3
+    x.&f == () -> 3
+    f = (a, b) -> a+b
+    f(2,3) == 2+3
+    f 2, 3 == f(2,3)
+    f 2 3 == f(2(3)) # error, 2 no es función
+    f g x == f(g(x)) # esto sí es correcto
+    f 2 == f(2)
+    f = (a) -> a+1
+    (f x = 2) == f(x=2)
+    (f;x = 2) == f(); (x=2)
+    # (f g x) podría traducir a (f(g))(x), pero haskell y coffeescript traducen a
+    # f(g(x)), y como lo usa coffee, lo usaré yo, además fue lo primero que pensé.
+    # Smalltalk usa (f(g))(x), smalltalk siempre asocia a la izquierda.
 
-x.f = &f # válido, asignando el objeto función
-x.f = &f # ya asignado, pero no llama x.f, solo asigna, así que también válido
-x.&f = &f # igual válido
+    x.f = &f # válido, asignando el objeto función
+    x.f = &f # ya asignado, pero no llama x.f, solo asigna, así que también válido
+    x.&f = &f # igual válido
 
-{a=1,b=2} # Crea un objeto
-{a=1;b=2} # Es un bloque de código
-{a=1} #???
-x = {a=1}       # Parece un objeto...
-if x then {a=1} # Parece un bloque...
-  # No sé cómo resolver esto...
-  # No quiero mezclar los ":" y "=" en la sintaxis, y hacer que el compilador
-  # adivine si espera un bloque o un objeto es mucho trabajo.
-{a=1;b=2} == {a={1;b=2}} # POR DIOS!!
-  # la de arriba en realidad no se puede porque un bloque siempre va entre {}
-  # pero me asustó...
-  # OH!! Ya sé!
-  # los bloques de una sola expresión son ilegales...
-  # WHOOO qué pinchi genio soy!!
-  # es un poco poco práctico pero funciona para diferenciar.
+    {a=1,b=2} # Crea un objeto
+    {a=1;b=2} # Es un bloque de código
+    {a=1} #???
+    x = {a=1}       # Parece un objeto...
+    if x then {a=1} # Parece un bloque...
+    # No sé cómo resolver esto...
+    # No quiero mezclar los ":" y "=" en la sintaxis, y hacer que el compilador
+    # adivine si espera un bloque o un objeto es mucho trabajo.
+    {a=1;b=2} == {a={1;b=2}} # POR DIOS!!
+    # la de arriba en realidad no se puede porque un bloque siempre va entre {}
+    # pero me asustó...
+    # OH!! Ya sé!
+    # los bloques de una sola expresión son ilegales...
+    # WHOOO qué pinchi genio soy!!
+    # le quita libertad a la sintaxis pero funciona. No hacen falta bloques de
+    # una sola expresión porque esos se llaman "Expresiones", si es una sola
+    # no hace falta encerrarla
 
-  # Otra solución podría ser
-new {a=1} #... nah, está muy feo
+    # Otra solución podría ser
+    new {a=1} #... nah, está muy feo
 
-  # Otro problema!:
-f(g x, y) # Traduce a uno de:
-f(g(x),y)
-f(g(x,y))
-  # Creo que el primero tiene más sentido, pero es dificil para el compilador
-  # averiguar que debe usar el primero.
-  # Coffee usa el segundo, así que con ese vamos!
+    # Otro problema!:
+    f(g x, y) # Traduce a uno de:
+    f(g(x),y)
+    f(g(x,y))
+    # Creo que el primero tiene más sentido, pero es dificil para el compilador
+    # averiguar que debe usar el primero.
+    # Coffee usa el segundo, así que con ese vamos!
 
 

@@ -38,7 +38,8 @@ function parse (instate) {
     }
 
   // Basic token Helpers
-    var nil_const = {type: "nil", val: "nil"};
+    var nil_const = {type: "nil"};
+    var varargs_const = {type: "varargs"};
     function try_name () {
       if (eof()) return null;
       if (peek().type == "var") return consume().match;
@@ -151,8 +152,11 @@ function parse (instate) {
       return nil_const;
     }
     function parse_varargs () {
-      if (try_grammar("...")) return {type: "varargs"};
-      return null;
+      var tok = peek();
+      if (tok.type != "const") return null;
+      if (tok.match != "...") return null;
+      consume();
+      return varargs_const;
     }
 
   // AST parsers
@@ -211,14 +215,21 @@ function parse (instate) {
   function parse_if () {
     if (!try_kw("if")) return null;
     var cond = fail_null(parse_exp(), "Expected an if condition expression");
-    fail_if(!try_kw("then"), "Expected block then keyword");
+    fail_if(!try_kw("then"), "Expected then keyword for if block");
     var block = fail_null(parse_block(), "Expected an if block")
+    var elseifs = [];
+    while (try_kw("elseif")) {
+      var econd = fail_null(parse_exp(), "Expected an elseif condition expression");
+      fail_if(!try_kw("then"), "Expected then keyword for elseif block");
+      var eblock = fail_null(parse_block(), "Expected an elseif block")
+      elseifs.push({cond: econd, block: eblock});
+    }
     var elseb = nil_const;
     if (try_kw("else")) {
       elseb = fail_null(parse_seq(), "Expected an else block");
     }
     fail_if(!try_kw("end"), "Expected end keyword after block.");
-    return {type: "if", cond: cond, block: block, "else": elseb};
+    return {type: "if", cond: cond, block: block, elseifs: elseifs, "else": elseb};
   }
   function parse_while () {
     if (!try_kw("while")) return null;
@@ -227,6 +238,24 @@ function parse (instate) {
     var block = fail_null(parse_block(), "Expected a while block");
     fail_if(!try_kw("end"), "Expected end keyword after block.");
     return {type: "while", cond: cond, block: block};
+  }
+  // Por ahora solo el for numérico
+  function parse_for () {
+    if (!try_kw("for")) return null;
+    var name = fail_null(try_name(), "Required name for loop variable");
+    fail_ifn(try_grammar("="), "Expecting equal sign for loop assignment");
+    var exp1 = fail_null(parse_exp(), "Required expresion for loop");
+    fail_ifn(try_grammar(","), "Expecting comma for loop separation");
+    var exp2 = fail_null(parse_exp(), "Required expresion for loop");
+    var exp3 = {type: "num", value: 1};
+    if (try_grammar(",")) {
+      var exp3 = fail_null(parse_exp(), "Required expresion for loop");
+    }
+    fail_ifn(try_kw("do"), "Expected do for block start");
+    var block = fail_null(parse_block(), "Expecting block content");
+    fail_ifn(try_kw("end"), "Expected end for blockending");
+    return {type: "fornum", var: {type: "var", value: name},
+            start: exp1, end: exp2, step: exp3, block: block};
   }
   function parse_atom () {
     function in_parens () {
@@ -246,10 +275,10 @@ function parse (instate) {
       //in_unop,
       in_parens,
       parse_table,
-      parse_if,
-      parse_while,
       parse_cons,
-      parse_var_call
+      parse_var_call,
+      parse_varargs,
+      parse_func_exp
     ]);
     return exp;
   }
@@ -298,6 +327,7 @@ function parse (instate) {
       }
       if (try_grammar("[")) {
         var exp = fail_null(parse_exp(), "Expected expresion for field");
+        fail_ifn(try_grammar("]"), "Expecting closing bracket at field access")
         last = {type: "field", var: last, field: exp};
         continue;
       }
@@ -326,13 +356,53 @@ function parse (instate) {
     fail_ifn(exps.length > 0, "At least one expression is needed for assignment");
     return {type: "assign", vars: vars, exps: exps};
   }
+  function parse_func_body () {
+    fail_ifn(try_grammar("("));
+    var args = [];
+    while (true) {
+      if (parse_varargs() != null) {
+        args.push(varargs_const);
+        break;
+      }
+      var name = try_name();
+      if (name == null) break;
+      args.push({type: "var", name: name});
+      if (!try_grammar(",")) break;
+    }
+    fail_ifn(try_grammar(")"), "Expecting close parenthesis");
+    var block = parse_block();
+    fail_ifn(try_kw("end") , "Expecting end keyword");
+    return {type: "func", args: args, block: block};
+  }
+  function parse_func_stat () {
+    if (!try_kw("function")) return null;
+    var name = fail_null(try_name(), "Expected functinon name");
+    var body = fail_null(parse_func_body(), "Expecting the body of the function")
+    return {type: "assign", vars: [{type: "var", name: name}], exps: body}
+  }
+  function parse_func_exp () {
+    if (!try_kw("function")) return null;
+    return fail_null(parse_func_body(), "Expecting the body of the function")
+  }
   function parse_stat () {
     var exp = try_any([
       parse_call_assign,
       parse_if,
-      parse_while
+      parse_while,
+      parse_for,
+      parse_func_stat
     ]);
     return exp;
+  }
+  function parse_name_list () {
+    var vars = [];
+    while (true) {
+      var name = try_name();
+      if (name == null) break;
+      vars.push({type: "var", name: name});
+      if (!try_grammar(",")) break;
+    }
+    return vars;
   }
   function parse_exp_list () {
     var exps = [];
@@ -346,7 +416,6 @@ function parse (instate) {
   }
   function parse_block () {
     var stats = [];
-    var ret = null;
     while (true) {
       if (eof()) break;
       var stat = parse_stat();
@@ -354,14 +423,23 @@ function parse (instate) {
       stats.push(stat);
       try_grammar(";"); // Opcional
     }
+    // Return y break, por normas sintáticas de Lua, solo pueden aparecer
+    // al final.
+    if (try_kw("return")) {
+      var exp = fail_null(parse_exp_list());
+      stats.push({type: "return", list: exp});
+    }
+    if (try_kw("break")) {
+      stats.push({type: "break"});
+    }
     // el keyword "end" no es parte del bloque, eso es responsabilidad
-    // de quien haya buscado un bloque.
+    // de quien preguntó por el bloque.
     return {type: "block", seq: stats};
   }
 
   var result = parse_block();
   if (!eof()) {
-    //fail("Failed consuming all of the tokens");
+    fail("Failed consuming all of the tokens");
   }
   instate.ast = result;
   instate.parsed = true;
@@ -369,31 +447,3 @@ function parse (instate) {
 }
 
 exports.parse = parse;
-
-/* EBNF
-
-var := name | prefexp "[" exp "]" | prefexp "." name
-prefexp := var | call | "(" exp ")"
-call := prefexp "(" explist ")"
-
-const := number | "true" | "false" | "nil"
-explist := exp { "," exp }
-
-exp := number
-exp := string
-exp := boolean
-exp := table
-exp := var
-exp := call
-exp := exp binop exp
-exp := unop exp
-
-assign := var { "," var } "=" explist
-
-ifstat := "if" exp "then" block ["else" block] "end"
-whilestat := "while" exp "do" block "end"
-forstat := "for" name "," name "in" exp "do" block "end"
-
-stat := assign | call | ifstat | whilestat | forstat
-
-*/

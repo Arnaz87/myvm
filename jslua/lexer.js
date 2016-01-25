@@ -97,9 +97,11 @@ function tokenize (instate) {
   var numrgx = /[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?/;
   var varrgx = /[a-z][a-zA-Z0-9]*/;
   var strrgx = /\"([^\\^\"]|\\.)*\"/;
-  var kws = ["do", "else", "elseif", "end", "for", "function", "if", "in",
-             "repeat", "then", "until", "while"];
-  var stmts = ["local", "break", "return"];
+  // Cuidado aquí: No poner else antes de elseif, el primero que concuerda
+  // con el input se selecciona y se ignoran los demás, y si el input empieza
+  // con "elseif", también empieza con "else"...
+  var kws = ["do", "elseif","else", "end", "for", "function", "if", "in",
+             "repeat", "then", "until", "while", "local", "break", "return"];
   var cons = ["true", "false", "nil", "..."];
   var ops = ["+", "-", "*", "/", "%", "^", "<", ">", "==", "<=", ">=", "~=",
              "and", "or", "not", "..", "#"];
@@ -116,7 +118,6 @@ function tokenize (instate) {
     }*/
     var toks = [];
     function mpush (x) {if (x) {toks.push(x)}}
-    mpush(mAny(stmts, "stmt"));
     mpush(mAny(cons, "const"));
     mpush(mAny(kws, "kw"));
     mpush(mAny(ops, "op"));

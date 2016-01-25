@@ -67,25 +67,25 @@ function state (input) {
     tostr: function () {
       var str = "";
       if (this.tokens) {
-        str += "tokens:\n"
+        str += "\"Tokens\":\n"
         for (var i = 0; i < this.tokens.length; i++) {
           var tkn = this.tokens[i];
           str += "  " + JSON.stringify(tkn) + "\n";
         };
       }
       if (this.ast) {
-        str += "syntax tree:\n";
+        str += ", \"Syntax Tree\":\n";
         str += JSON.stringify(this.ast, null, 2);
         str += "\n";
       }
       if (this.code) {
-        str += "code:\n";
+        str += ", \"Code\":\n";
         for (var i = 0; i < this.code.length; i++) {
           var inst = this.code[i];
           str += "  " + JSON.stringify(inst) + "\n";
         };
       }
-      return str;
+      return "{" + str + "}";
     }
   };
 }
