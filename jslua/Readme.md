@@ -57,6 +57,8 @@ numérico. Faltan repeat, do y for genérico.
 ponerlo al final de un bloque.
 * Soporta funciones, con nombres y anónimas. "function x (a) b end" traduce a
 "x = function (a) b end" en el árbol sintáctico.
+* Puede construir objetos con las sintaxis para lista {1,2,3}, la común
+{a=1,b=2}, la de campos {[5+2]=7,[foo()]=bar()} y mixta.
 
 * Faltan scopes para asignación de variables.
 * Lua oficial puede usar expresiones entre paréntesis como objetos, se pueden
@@ -68,7 +70,17 @@ caracteres, solo se puede si antes guardo el string resultante en una variable.
 
 ## Compilador
 
-Por ahora está desactivado para avanzar el parser hasta el punto en que esté
-satisfecho.
+Soporta:
 
-    
+* Puede compilar todas las expresiones aritméticas y lógicas (las unarias no,
+tampoco las no aritméticas como concatenación o las de bits)
+* Llamado de funciones con argumentos, tanto en sentencias como en expresiones.
+* Solo se puede usar el primer resultado de una función expresión.
+* Puede asignar variables y asignar campos de objetos.
+* Leer y asignar campos de objetos.
+
+Falta:
+
+* Control de flujo
+* Definición de funciones
+* Creación de objetos

@@ -8,7 +8,7 @@ function process_input (str) {
   exports.last = st;
   lexer.tokenize(st);
   parser.parse(st);
-  //compiler.compile(st);
+  compiler.compile(st);
   return st;
 }
 

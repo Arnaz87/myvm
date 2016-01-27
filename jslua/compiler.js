@@ -1,10 +1,8 @@
-function compiler_state () {
+function compiler_state (ncode) {
+  if (!ncode) {ncode = [];}
   return {
-    ast: null,
-    vars: {},
     consts: {},
-    code: [],
-    labels: {},
+    code: ncode,
     lastlabel: 0,
     lastconst: 0,
     lasttemp: 0,
@@ -18,6 +16,9 @@ function compiler_state () {
     },
     get_temp: function () {
       return "_temp_" + this.lasttemp++;
+    },
+    push: function () {
+      this.code.push(Array.prototype.slice.call(arguments));
     }
   }
 }
@@ -45,127 +46,114 @@ var ops = {
 }
 var reversed = [">", ">="];
 
+function compile_code (st_ast, state) {
+  if (!state) { state = compiler_state(); }
+  function compile_const (ast) {
+    var name = state.get_temp()
+    state.push("loadval", name, ast.value);
+    return name;
+  }
+  function compile_binop (ast) {
+    var op = ops[ast.op];
+    var left = compile_exp(ast.left);
+    var right = compile_exp(ast.right);
+    var name = state.get_temp();
+    state.push(op, name, left, right);
+    return name;
+  }
+  function compile_field (ast) {
+    var left = compile_exp(ast.var);
+    var field = compile_exp(ast.field);
+    var result = state.get_temp();
+    state.push("setarg", left, 0);
+    state.push("setarg", field, 1);
+    state.push("call", "__get", 2);
+    state.push("getarg", result, 0);
+    return result;
+  }
+  function compile_call (ast) {
+    var fun = compile_exp(ast["var"]);
+    args = [];
+    for (var i = 0; i < ast.args.length; i++) {
+      args[i] = compile_exp(ast.args[i]);
+    };
+    for (var i = 0; i < args.length; i++) {
+      state.push("setarg", args[i], i);
+    };
+    state.push("call", fun, args.length);
+    var result = state.get_temp();
+    state.push("getarg", result, 0);
+    return result;
+    // No puede devolver multiples resultados, solo el primero.
+  }
+  function compile_exp (ast) {
+    switch (ast.type) {
+      case "var": return ast.name;
+      case "num":
+      case "str":
+      case "bool":
+        return compile_const(ast);
+      case "binop":
+        return compile_binop(ast);
+      case "field":
+        return compile_field(ast);
+      case "call":
+        return compile_call(ast);
+    }
+    //throw new Error("Unrecognized expression AST type: " + ast.type);
+  }
+  function single_assign (left, right) {
+    // Por ahora, solo voy a asignar variables, no campos de objetos.
+    var result = compile_exp(right);
+    switch (left.type) {
+      case "var":
+        state.push("mov", left.name, result);
+        break;
+      case "field":
+        var v = compile_exp(left.var);
+        var field = compile_exp(left.field);
+        state.push("setarg", v, 0);
+        state.push("setarg", field, 1);
+        state.push("setarg", result, 2);
+        state.push("call", "__get", 3);
+        break;
+    }
+  }
+  function compile_assign (ast) {
+    for (var i = 0; i < ast.vars.length && i < ast.exps.length; i++) {
+      single_assign(ast.vars[i], ast.exps[i]);
+    };
+  }
+  function compile_stat (ast) {
+    switch (ast.type) {
+      case "assign":
+        return compile_assign(ast);
+      case "call":
+        return compile_call(ast);
+    }
+    //throw new Error("Unrecognized statement AST type: " + ast.type);
+  }
+  function compile_block (ast) {
+    for (var i = 0; i < ast.seq.length; i++) {
+      var stat = ast.seq[i];
+      compile_stat(stat);
+    };
+  }
+  compile_block(st_ast);
+}
+
+function compile_func (ast, state) {
+  if (!state) { state = compiler_state(); }
+  return compile_code(ast, state);
+}
+
 function compile (instate) {
   if (instate.compiled) {
     console.log("Already compiled!");
     return instate.code;
   }
-  var state = compiler_state();
-
-  function compile_const (ast) {
-    var name = state.get_temp();
-    state.code.push(["loadval", name, ast.value]);
-    return name;
-  }
-  function compile_binop (ast) {
-    var op = ops[ast.op];
-    var name = state.get_temp();
-    var left = compile_value(ast.left);
-    var right = compile_value(ast.right);
-    if (contains(reversed, ast.op)) {
-      var tmp = left; left = right; right = tmp;
-    }
-    state.code.push([op, name, left, right]);
-    return name;
-  }
-  function compile_assign (ast) {
-    // Esto solo es por ahora, porque aún no tengo una estructura para tablas.
-    if (ast.var.type != "var") return null;
-    var name = ast.var.value;
-    var val = compile_value(ast.val);
-    state.code.push(["mov", name, val]);
-  }
-  function compile_if (ast) {
-    var l_if = state.get_label();
-    var l_else = state.get_label();
-    var l_end = state.get_label();
-    var result = state.get_temp();
-
-    var cond = compile_value(ast.cond);
-    state.code.push(["jumpifn", l_else, cond]);
-
-    state.code.push(["label", l_if])
-    var v_if = compile_value(ast.block);
-    state.code.push(["mov", result, v_if]);
-    state.code.push(["jump", l_end]);
-
-    state.code.push(["label", l_else])
-    var v_else = compile_value(ast["else"]);
-    state.code.push(["mov", result, v_else]);
-
-    state.code.push(["label", l_end])
-    return result;
-  }
-  function compile_while (ast) {
-    var l_start = state.get_label();
-    var l_block = state.get_label();
-    var l_end   = state.get_label();
-    var result = state.get_temp();
-
-    state.code.push(["label", l_start])
-    var cond = compile_value(ast.cond);
-    state.code.push(["jumpifn", l_end, cond]);
-
-    state.code.push(["label", l_block]);
-    var v_block = compile_value(ast.block);
-    state.code.push(["mov", result, v_block]);
-    state.code.push(["jump", l_start]);
-
-    state.code.push(["label", l_end]);
-    return result;
-  }
-  function compile_call (ast) {
-    var fun = compile_value(ast.var);
-    var result = state.get_temp();
-    var args = []
-    for (var i = 0; i < ast.args.length; i++) {
-      var arg = ast.args[i];
-      var val = compile_value(arg);
-      args.push({val: val, i: i});
-    };
-    // Tengo que crear las instrucciones en un bucle separado porque alguno
-    // de los argumentos podría llamar funciones y cambiar los argumentos.
-    for (var i = 0; i < args.length; i++) {
-      var arg = args[i];
-      state.code.push(["setarg", arg.val, arg.i]);
-    };
-    state.code.push(["call", fun, ast.args.length]);
-    state.code.push(["getarg", result, 0]);
-    return result;
-  }
-  function compile_seq (ast) {
-    var seq = ast.seq;
-    var last = null;
-    for (var i = 0; i < seq.length; i++) {
-      last = compile_value(seq[i]);
-    };
-    return last;
-  }
-  function compile_value (ast) {
-    switch (ast.type) {
-      case "seq": return compile_seq(ast);
-      case "nil": return "_nil";
-      case "num":
-      case "str":
-      case "bool":
-        return compile_const(ast);
-      case "var":
-        return ast.value;
-      case "binop":
-        return compile_binop(ast);
-      case "assign":
-        return compile_assign(ast);
-      case "if":
-        return compile_if(ast);
-      case "while":
-        return compile_while(ast);
-      case "call":
-        return compile_call(ast);
-    }
-  }
-
-  compile_value(instate.ast);
-  
+  state = compiler_state();
+  compile_code(instate.ast, state)
   instate.code = state.code;
   instate.compiled = true;
   return instate.code;

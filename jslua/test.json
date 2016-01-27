@@ -1,40 +1,8 @@
 {"Tokens":
   {"type":"var","match":"a","pos":0}
   {"type":"gmr","match":"=","pos":2}
-  {"type":"num","match":"3","pos":4}
-  {"type":"kw","match":"if","pos":6}
-  {"type":"var","match":"a","pos":9}
-  {"type":"op","match":"==","pos":11}
-  {"type":"num","match":"1","pos":14}
-  {"type":"kw","match":"then","pos":16}
-  {"type":"var","match":"print","pos":23}
-  {"type":"gmr","match":"(","pos":28}
-  {"type":"str","match":"\"uno\"","pos":29}
-  {"type":"gmr","match":")","pos":34}
-  {"type":"kw","match":"elseif","pos":36}
-  {"type":"var","match":"a","pos":43}
-  {"type":"op","match":"==","pos":45}
-  {"type":"num","match":"2","pos":48}
-  {"type":"kw","match":"then","pos":50}
-  {"type":"var","match":"print","pos":57}
-  {"type":"gmr","match":"(","pos":62}
-  {"type":"str","match":"\"dos\"","pos":63}
-  {"type":"gmr","match":")","pos":68}
-  {"type":"kw","match":"elseif","pos":70}
-  {"type":"var","match":"a","pos":77}
-  {"type":"op","match":"==","pos":79}
-  {"type":"num","match":"3","pos":82}
-  {"type":"kw","match":"then","pos":84}
-  {"type":"var","match":"print","pos":91}
-  {"type":"gmr","match":"(","pos":96}
-  {"type":"str","match":"\"tres\"","pos":97}
-  {"type":"gmr","match":")","pos":103}
-  {"type":"kw","match":"else","pos":105}
-  {"type":"var","match":"print","pos":112}
-  {"type":"gmr","match":"(","pos":117}
-  {"type":"str","match":"\"mucho!\"","pos":118}
-  {"type":"gmr","match":")","pos":126}
-  {"type":"kw","match":"end","pos":128}
+  {"type":"gmr","match":"{","pos":4}
+  {"type":"gmr","match":"}","pos":5}
 , "Syntax Tree":
 {
   "type": "block",
@@ -49,128 +17,13 @@
       ],
       "exps": [
         {
-          "type": "num",
-          "value": 3
+          "type": "table",
+          "fields": []
         }
       ]
-    },
-    {
-      "type": "if",
-      "cond": {
-        "type": "binop",
-        "op": "==",
-        "left": {
-          "type": "var",
-          "name": "a"
-        },
-        "right": {
-          "type": "num",
-          "value": 1
-        }
-      },
-      "block": {
-        "type": "block",
-        "seq": [
-          {
-            "type": "call",
-            "var": {
-              "type": "var",
-              "name": "print"
-            },
-            "args": [
-              {
-                "type": "str",
-                "value": "uno"
-              }
-            ]
-          }
-        ]
-      },
-      "elseifs": [
-        {
-          "cond": {
-            "type": "binop",
-            "op": "==",
-            "left": {
-              "type": "var",
-              "name": "a"
-            },
-            "right": {
-              "type": "num",
-              "value": 2
-            }
-          },
-          "block": {
-            "type": "block",
-            "seq": [
-              {
-                "type": "call",
-                "var": {
-                  "type": "var",
-                  "name": "print"
-                },
-                "args": [
-                  {
-                    "type": "str",
-                    "value": "dos"
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "cond": {
-            "type": "binop",
-            "op": "==",
-            "left": {
-              "type": "var",
-              "name": "a"
-            },
-            "right": {
-              "type": "num",
-              "value": 3
-            }
-          },
-          "block": {
-            "type": "block",
-            "seq": [
-              {
-                "type": "call",
-                "var": {
-                  "type": "var",
-                  "name": "print"
-                },
-                "args": [
-                  {
-                    "type": "str",
-                    "value": "tres"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ],
-      "else": {
-        "type": "seq",
-        "seq": [
-          {
-            "type": "call",
-            "var": {
-              "type": "var",
-              "name": "print"
-            },
-            "args": [
-              {
-                "type": "str",
-                "value": "mucho!"
-              }
-            ]
-          }
-        ]
-      }
     }
   ]
 }
+, "Code":
+  ["mov","a",null]
 }
