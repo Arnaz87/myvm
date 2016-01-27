@@ -78,9 +78,15 @@ tampoco las no aritméticas como concatenación o las de bits)
 * Solo se puede usar el primer resultado de una función expresión.
 * Puede asignar variables y asignar campos de objetos.
 * Leer y asignar campos de objetos.
+* Creación de objetos
+* If... falta while
 
 Falta:
 
-* Control de flujo
+* Control de flujo...
 * Definición de funciones
-* Creación de objetos
+
+## TODO
+
+* Limpiar el compilador en While.
+* Arreglar el compilador en binop, con los operadores invertidos.

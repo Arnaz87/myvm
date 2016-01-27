@@ -58,6 +58,7 @@ function compile_code (st_ast, state) {
     var left = compile_exp(ast.left);
     var right = compile_exp(ast.right);
     var name = state.get_temp();
+    // TODO: Arreglar lo de reversed
     state.push(op, name, left, right);
     return name;
   }
@@ -86,6 +87,31 @@ function compile_code (st_ast, state) {
     return result;
     // No puede devolver multiples resultados, solo el primero.
   }
+  function compile_table (ast) {
+    var table = state.get_temp();
+    state.push("call", "__table", 0);
+    state.push("getarg", table, 0);
+    var arrpos = 0;
+    for (var i = 0; i < ast.fields.length; i++) {
+      var field = ast.fields[i]
+      switch (field.type) {
+        case "field":
+          var name = compile_exp(field.name);
+          break;
+        case "arr":
+          var name = state.get_temp();
+          state.push("loadval", name, arrpos);
+          arrpos++;
+          break;
+      }
+      var value = compile_exp(field.value);
+      state.push("setarg", table, 0);
+      state.push("setarg", name,  1);
+      state.push("setarg", value, 2);
+      state.push("call", "__set", 3);
+    };
+    return table;
+  }
   function compile_exp (ast) {
     switch (ast.type) {
       case "var": return ast.name;
@@ -99,8 +125,42 @@ function compile_code (st_ast, state) {
         return compile_field(ast);
       case "call":
         return compile_call(ast);
+      case "table":
+        return compile_table(ast);
     }
     //throw new Error("Unrecognized expression AST type: " + ast.type);
+  }
+  function compile_if (ast) {
+    var else_label = state.get_label();
+    var end_label = state.get_label();
+    for (var i = 0; i < ast.ifs.length; i++) {
+      var next_label = state.get_label();
+      var result = compile_exp(ast.ifs[i].cond);
+      state.push("jumpifn", next_label, result)
+      compile_block(ast.ifs[i].block);
+      state.push("jump", end_label);
+      state.push("label", next_label);
+    };
+    state.push("label", else_label)
+    if (ast["else"] !== null) {
+      compile_block(ast["else"])
+    }
+    state.push("label", end_label);
+  }
+  function compile_while (ast) {
+    // TODO:
+    // Limpiar aquí...
+    var cond_label = state.get_label();
+    var block_label = state.get_label();
+    var end_label = state.get_label();
+    state.push("label", cond_label);
+    var result = compile_exp(ast.cond);
+    state.push("jumpif", block_label, result);
+    state.push("jump", end_label);
+    state.push("label", block_label);
+    compile_block(ast.block);
+    state.push("jump", cond_label);
+    state.push("label", end_label);
   }
   function single_assign (left, right) {
     // Por ahora, solo voy a asignar variables, no campos de objetos.
@@ -115,7 +175,7 @@ function compile_code (st_ast, state) {
         state.push("setarg", v, 0);
         state.push("setarg", field, 1);
         state.push("setarg", result, 2);
-        state.push("call", "__get", 3);
+        state.push("call", "__set", 3);
         break;
     }
   }
@@ -130,6 +190,10 @@ function compile_code (st_ast, state) {
         return compile_assign(ast);
       case "call":
         return compile_call(ast);
+      case "if":
+        return compile_if(ast);
+      case "while":
+        return compile_while(ast);
     }
     //throw new Error("Unrecognized statement AST type: " + ast.type);
   }

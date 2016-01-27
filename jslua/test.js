@@ -33,19 +33,33 @@ fs.readFile(infile, 'utf8', function (err, data) {
   //console.log(state.tostr());
   console.log("Writing data to " + outfile);
   fs.writeFile(outfile, state.tostr());
-  /*console.log("Ejecutar");
-  execute(state);*/
+  //*/
+  console.log("Ejecutar");
+  execute(state);
+  //*/
 });
 
 function execute (state) {
   var start_code = [
-    ["module", "print", "Main", "print"]
+    ["module", "print", "Main", "print"],
+    ["module", "__table", "Main", "table"],
+    ["module", "__get", "Main", "get"],
+    ["module", "__set", "Main", "set"]
   ];
   var mod = {
     name: "Main",
     main: start_code.concat(state.code),
     print: function () {
       console.log(machine.args[0]);
+    },
+    table: function () {
+      machine.args[0] = {};
+    },
+    get: function () {
+      machine.args[0] = machine.args[0][machine.args[1]];
+    },
+    set: function () {
+      machine.args[0][machine.args[1]] = machine.args[2];
     }
   }
   machine.debug = 0;

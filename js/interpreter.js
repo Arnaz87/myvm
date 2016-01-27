@@ -103,3 +103,4 @@ function execLoop () {
 
 exports.exec = exec;
 exports.execLoop = execLoop;
+exports.compileLabels = compileLabels;

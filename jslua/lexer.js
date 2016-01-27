@@ -64,7 +64,8 @@ function tokenize (instate) {
   function getpos () { return input.length - left.length; }
   function consume_space () {
     //var regex = /[\ \t]*/; // No se consume las nuevas líneas.
-    var regex = /\s*/;
+    var regex = /(\s|--.*\n)*/;
+    // Consume espacios, tabuladores, lineas nuevas y comentarios de una línea
     var match = regex.exec(left);
     if (match) { consume(match[0].length); }
   }
@@ -103,7 +104,8 @@ function tokenize (instate) {
   var kws = ["do", "elseif","else", "end", "for", "function", "if", "in",
              "repeat", "then", "until", "while", "local", "break", "return"];
   var cons = ["true", "false", "nil", "..."];
-  var ops = ["+", "-", "*", "/", "%", "^", "<", ">", "==", "<=", ">=", "~=",
+  // Aquí también cuidado, los más largos deben ir primero.
+  var ops = ["+", "-", "*", "/", "%", "^", "==", "<=", ">=", "<", ">", "~=",
              "and", "or", "not", "..", "#"];
   var grammar = [";", "[", "]", "{", "}", "(", ")", ".", ",", "="];
 

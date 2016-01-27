@@ -1,8 +1,24 @@
 {"Tokens":
-  {"type":"var","match":"a","pos":0}
+  {"type":"var","match":"x","pos":0}
   {"type":"gmr","match":"=","pos":2}
-  {"type":"gmr","match":"{","pos":4}
-  {"type":"gmr","match":"}","pos":5}
+  {"type":"num","match":"10","pos":4}
+  {"type":"kw","match":"while","pos":7}
+  {"type":"gmr","match":"(","pos":13}
+  {"type":"var","match":"x","pos":14}
+  {"type":"op","match":">","pos":15}
+  {"type":"num","match":"0","pos":16}
+  {"type":"gmr","match":")","pos":17}
+  {"type":"kw","match":"do","pos":19}
+  {"type":"var","match":"x","pos":24}
+  {"type":"gmr","match":"=","pos":26}
+  {"type":"var","match":"x","pos":28}
+  {"type":"op","match":"-","pos":29}
+  {"type":"num","match":"1","pos":30}
+  {"type":"var","match":"print","pos":34}
+  {"type":"gmr","match":"(","pos":39}
+  {"type":"var","match":"x","pos":40}
+  {"type":"gmr","match":")","pos":41}
+  {"type":"kw","match":"end","pos":43}
 , "Syntax Tree":
 {
   "type": "block",
@@ -12,18 +28,89 @@
       "vars": [
         {
           "type": "var",
-          "name": "a"
+          "name": "x"
         }
       ],
       "exps": [
         {
-          "type": "table",
-          "fields": []
+          "type": "num",
+          "value": 10
         }
       ]
+    },
+    {
+      "type": "while",
+      "cond": {
+        "type": "binop",
+        "op": ">",
+        "left": {
+          "type": "var",
+          "name": "x"
+        },
+        "right": {
+          "type": "num",
+          "value": 0
+        }
+      },
+      "block": {
+        "type": "block",
+        "seq": [
+          {
+            "type": "assign",
+            "vars": [
+              {
+                "type": "var",
+                "name": "x"
+              }
+            ],
+            "exps": [
+              {
+                "type": "binop",
+                "op": "-",
+                "left": {
+                  "type": "var",
+                  "name": "x"
+                },
+                "right": {
+                  "type": "num",
+                  "value": 1
+                }
+              }
+            ]
+          },
+          {
+            "type": "call",
+            "var": {
+              "type": "var",
+              "name": "print"
+            },
+            "args": [
+              {
+                "type": "var",
+                "name": "x"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
 , "Code":
-  ["mov","a",null]
+  ["loadval","_temp_0",10]
+  ["mov","x","_temp_0"]
+  ["label","_label_0"]
+  ["loadval","_temp_1",0]
+  ["lt","_temp_2","x","_temp_1"]
+  ["jumpif","_label_1","_temp_2"]
+  ["jump","_label_2"]
+  ["label","_label_1"]
+  ["loadval","_temp_3",1]
+  ["sub","_temp_4","x","_temp_3"]
+  ["mov","x","_temp_4"]
+  ["setarg","x",0]
+  ["call","print",1]
+  ["getarg","_temp_5",0]
+  ["jump","_label_0"]
+  ["label","_label_2"]
 }

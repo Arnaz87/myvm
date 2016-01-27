@@ -14,6 +14,7 @@ function execute (program) {
   M.state.pc = 0;
   M.state.run = true;
   M.run = true;
+  interpreter.compileLabels();
   interpreter.execLoop();
 }
 

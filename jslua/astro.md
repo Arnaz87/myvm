@@ -94,4 +94,14 @@ usa el método length.
     # averiguar que debe usar el primero.
     # Coffee usa el segundo, así que con ese vamos!
 
+    # La sintaxis para un array es
+    [1,2,3]
+    # Para acceder a un campo:
+    a[1]
+    # Pero eso es un acceso a campo, o una función recibiendo un array
+    # como argumento?
+    # Coffeescript Lo separa con espacios:
+    a[1]  # Primer campo de a
+    a [1] # Invocar a con un array de un elemento 1 como argumento.
+
 

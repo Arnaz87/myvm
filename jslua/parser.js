@@ -197,7 +197,7 @@ function parse (instate) {
         pos = back;
         return null;
       }
-      return {type: "field", name: null, value: exp};
+      return {type: "arr", value: exp};
     }
     while (true) {
       var field = try_any([
@@ -214,22 +214,23 @@ function parse (instate) {
   }
   function parse_if () {
     if (!try_kw("if")) return null;
+    var ifs = [];
     var cond = fail_null(parse_exp(), "Expected an if condition expression");
     fail_if(!try_kw("then"), "Expected then keyword for if block");
     var block = fail_null(parse_block(), "Expected an if block")
-    var elseifs = [];
+    ifs.push({cond: cond, block: block})
     while (try_kw("elseif")) {
       var econd = fail_null(parse_exp(), "Expected an elseif condition expression");
       fail_if(!try_kw("then"), "Expected then keyword for elseif block");
       var eblock = fail_null(parse_block(), "Expected an elseif block")
-      elseifs.push({cond: econd, block: eblock});
+      ifs.push({cond: econd, block: eblock});
     }
-    var elseb = nil_const;
+    var elseb = null;
     if (try_kw("else")) {
       elseb = fail_null(parse_seq(), "Expected an else block");
     }
     fail_if(!try_kw("end"), "Expected end keyword after block.");
-    return {type: "if", cond: cond, block: block, elseifs: elseifs, "else": elseb};
+    return {type: "if", ifs: ifs, "else": elseb};
   }
   function parse_while () {
     if (!try_kw("while")) return null;
