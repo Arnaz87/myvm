@@ -1,0 +1,28 @@
+# Call Stack
+
+Estaba pensando en los argumentos de llamada de función...
+Ahorita estoy usando un registro de argumentos, separado del registro de la función, se usa para pasar argumentos a las funciones y para devolver valores de ellas. Es una ventana de registros que el programa puede usar libremente, igual que los normales. El problema con esto es que, puede estar asignando los argumentos, y en lo que asigna uno y otro, llama una función, lo que es probable porque la mayoría de las instrucciones pueden ejecutar funciones por detrás. Esa función que se llamó mientras se asignaban los argumentos, porque es una función, también necesita un registro de argumentos.
+Ahí está el problema.
+Instrucciones intermedias pueden desordenar el registro de argumentos mientras aún se asignan argumentos para las funciones principales.
+
+Una solución podría ser tener varios registros de argumentos, y cuando una instrucción intermedia necesite llamar una función, se le asigna un registro de argumentos privado, para que no desordene el de la principal. EL problema con esto es que se están invocando funciones, que en sí misma pueden hacer lo mismo, y la pila puede seguir creciendo. Todos los métodos se van a encontrar con el mismo problema, pero el detalle con este es que está asignando un stack de argumentos completo a cada función, con sus 16, 32 o 64 registros, y la mayoría de las funciones usa menos de 6 argumentos, y casi ninguna usa más de 10 o 12.
+Otro problema menos importante es que esta solución parece un poco una salida rápida.
+
+La otra solución que se me ocurre es usar un stack puro, no una ventana de registros. Cuando una función es invocada tiene libre acceso al stack, y cuando quiere terminar, o invocar otra función, tiene que borrarlo y empezar a llenarlo de nuevo. Una vez que hace eso la información se pierde, por lo que tiene que guardar los argumentos importantes en los registros antes de hacerlo.
+Una ventaja es que el programa ya no tiene que expecificar cuantos argumentos pasó, así no se confunde y envía valores inválidos que no llenó ni deja argumentos por fuera, y ya que no tiene que especificar la posición exacta de cada argumento, solo llenarlos en orden, las instrucciones se simplifican mucho.
+Cuando una instrucción intermedia quiera correr una función, puede congelar el stack, y empezar a usar el espacio libre que no se ha llenado. También (talves, tengo que pensar en como hacerlo) podría haber una forma de que la propia función congele el stack y empiece a usarlo sin interferir con otros argumentos.
+Otra ventaja, es que las funciones ya no tienen que reservar un gran espacio del stack que no van a utilizar, solo lo van llenando mientras lo necesitan. Obviamente el stack puede acabarse en algún momento, pero un stack de 128 registros, definitivamente va a durar más si se van usando 2, 3, 5 registros, que si se usan bloques enteros de 16.
+
+Me gusta mucho eso de congelar el stack... creo que puede ser muy útil. Pero hay que resolver el problema obvio: cómo se guarda la información de cada uno de los stacks en el stack principal?
+
+La primera solución sería tener un stack aparte, en donde se guarde el largo del stack congelado, para que cuando se descongele un pedazo, se puede revisar cuanto retroceder para la sección anterior. El problema con esta solución, es que si se desea un stack de stacks arbitrariamente largo, hay que crear otro array largo para guardar esta información, ya habiendo el stack de registros y el stack de argumentos. No es un inconveniente tan grande, pero
+
+
+Acabo de encontrarme con un problema grave al usar un stack de argumentos: El número de argumentos para una función, con este método, no se sabe hasta la ejecución del programa, cuando antes se sabía antes de la ejecución. Esto no es tan malo al interpretar, pero es un inconveniente al compilar. Las funciones compiladas reciben un número fijos de argumentos, y al compilar se puede comparar el número de argumentos enviados con el número que espera la función, y descartarla o generar funciones alternas que reciban esa cantidad de argumentos, pero eso no se puede hacer en ejecución.
+Para poder usar este método necesito una manera de chequear los argumentos que se pasan antes de ejecutar el código.
+
+Una manera de solucionarlo, talvés, sea asegurarse que desde que se borra el stack, hasta que se ejecuta la función, no haya ningun salto. Pero esto limita el código. Asegurarse de que la lógica de los saltos no interfiera con el congelado de stacks es posible, pero es muy complicado de implementar.
+
+Ya tengo una solución que me parece bien. Usar este sistema de stack de stacks de argumentos, tal como lo describí. Los programas pueden usarlo libremente, sin necesidad de garantizar determinismo. Los programas compilados sin embargo, al igual que con muchos otros aspectos de la máquina virtual, deben ser cuidadosos de no romper las reglas para ser compilados. Las reglas para compilar el uso del stack de argumentos es usar las instrucciones en fila, es decir, limpiar el stack, justo después llenar los argumentos, y justo después llamar la función, sin ninguna instrucción entre ninguno de los pasos. Así el compilador puede asegurar la función estáticamente y compilarla.
+
+Creo que no voy a dejar congelar el stack, trae varios problemas, es más simple si no se usa. El stack se congela automáticamente cuando una instrucción necesita usar el stack internamente, pero una función común no puede decidir hacerlo, solo la máquina virtual puede.

@@ -129,7 +129,7 @@ function parse (instate) {
       var r = null;
       switch (tok.match) {
         case "true": r = {type: "bool", value: true}; break;
-        case "false": r = {type: "bool", value: true}; break;
+        case "false": r = {type: "bool", value: false}; break;
       }
       if (r === null) return null;
       consume();
@@ -227,7 +227,7 @@ function parse (instate) {
     }
     var elseb = null;
     if (try_kw("else")) {
-      elseb = fail_null(parse_seq(), "Expected an else block");
+      elseb = fail_null(parse_block(), "Expected an else block");
     }
     fail_if(!try_kw("end"), "Expected end keyword after block.");
     return {type: "if", ifs: ifs, "else": elseb};
@@ -282,17 +282,6 @@ function parse (instate) {
       parse_func_exp
     ]);
     return exp;
-  }
-  function parse_seq () {
-    var exps = [];
-    while (true) {
-      var exp = parse_exp();
-      if (exp != null) exps.push(exp);
-      if (eof()) break;
-      if (peek().type != "nl") break;
-      consume();
-    }
-    return {type: "seq", seq: exps};
   }
   function parse_exp () {
     return parse_bin(parse_atom(), 0);

@@ -59,6 +59,11 @@ function compile_code (st_ast, state) {
     var right = compile_exp(ast.right);
     var name = state.get_temp();
     // TODO: Arreglar lo de reversed
+    if (contains(reversed, ast.op)) {
+      var tmp = right;
+      right = left;
+      left = tmp;
+    }
     state.push(op, name, left, right);
     return name;
   }
@@ -155,9 +160,7 @@ function compile_code (st_ast, state) {
     var end_label = state.get_label();
     state.push("label", cond_label);
     var result = compile_exp(ast.cond);
-    state.push("jumpif", block_label, result);
-    state.push("jump", end_label);
-    state.push("label", block_label);
+    state.push("jumpifn", end_label, result);
     compile_block(ast.block);
     state.push("jump", cond_label);
     state.push("label", end_label);
