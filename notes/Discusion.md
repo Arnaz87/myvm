@@ -69,6 +69,12 @@ pero por el hecho de ser muy similar a arquitecturas reales de CPU, se puede
 aprender mucho de ella, más aún si ya se hizo el trabajo de abstraer las
 diferencias entre arquitecturas reales.
 
+# Compilable
+
+El código para la máquina virtual es principalmente interpretado por una implementación de ella, pero también debe haber una variación de ese código que sea fácil de compilar eficientemente a código nativo que no dependa de entornos de ejecución. Esto es un punto importante de este proyecto, prácticamente el único otro proyecto existente que es más o menos similar es LLVM porque es compilado, pero no es intepretado. No sé que proyecto haya similar al mío en este sentido.
+
+El código seguro no es diferente al normal, son las mismas instrucciones, solo que un programa puede seguir algunas reglas para asegurar que su código pueda ser compilado eficientemente. La máquina virtual, además, soporta algunos datos estáticos, como tipos y constantes, que no cambian al correr el programa.
+
 
 # Entorno
 

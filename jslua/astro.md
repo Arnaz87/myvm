@@ -92,7 +92,8 @@ usa el método length.
     f(g(x,y))
     # Creo que el primero tiene más sentido, pero es dificil para el compilador
     # averiguar que debe usar el primero.
-    # Coffee usa el segundo, así que con ese vamos!
+    # Coffee usa el segundo, así que con ese vamos! Haskell también lo usa, 
+    # pero... Coffee!
 
     # La sintaxis para un array es
     [1,2,3]
@@ -104,4 +105,56 @@ usa el método length.
     a[1]  # Primer campo de a
     a [1] # Invocar a con un array de un elemento 1 como argumento.
 
+    # Funciones anónimas:
+    arr = [1,2,3,4]
+    arr.filter (x) -> x>2   # Coffee
+    arr.filter \x -> x>2    # Haskell
+    arr.filter { |x| x>2 }  # Ruby
+    arr.filter fun (x) x>2  # Idea 1 (Original)
+    arr.filter ( x -> x>2 ) # Idea 2
+    arr.filter { x -> x>2 } # Idea 3 (Variación de 2)
+    arr.filter fun x -> x>2 # Idea 4
+    # Mas complejo
 
+    # Haskell (Haskell no tiene instrucciones en sequencia)
+    arr.each_i (\i, e -> e.something i)
+
+    # Coffee
+    arr.each_i (i, e) ->
+      e.touch
+      e.something i
+
+    # Ruby
+    arr.each_i do |i e|
+      e.touch
+      e.something i
+    end
+
+    # Idea 1
+    arr.each_i fun (i, e)
+      e.touch
+      e.something i
+    # Con llaves
+    arr.each_i fun (i, e) {e.touch; e.something i}
+
+    # Idea 2
+    arr.each_i (i, e ->
+      e.touch
+      e.something i
+    ) # Fea porque no se puede usar identacion para agrupar
+    # La Idea 3 es igual pero con llaves
+
+    # Idea 4
+    arr.each_i fun i, e ->
+      e.touch
+      e.something 1
+
+    La sintaxis de haskell es genial porque es demasiado compacta y directa, pero no es común, siendo haskell el único lenguaje que conozco con esa sintaxis.
+    Existen tres variaciones principales para funciones anónimas.
+    La variación "palabra" usa una palabra clave para indicar función, y luego indica los argumentos y el bloque.
+    La variación "flecha" escribe los argumentos entre paréntesis, seguidos de una flecha (u otro símbolo) y el bloque.
+    La variación "cerrado" encierra los argumentos, o la función entera, con símbolos especiales y luego usa sintaxis especial.
+    Palabra es usada por Erlang, Go, Javascript, Lisp, Lua, Perl, PHP, Python
+    Flecha es usada por Coffee, Java, D, Dart, Julia, Scala
+    Una mezcla de ambas es usada por ML, Haskell, Elm, Groovy (separadas)
+    Cerrado es usada por Ruby, Smalltalk, Rust
