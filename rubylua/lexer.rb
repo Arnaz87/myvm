@@ -1,7 +1,7 @@
 require_relative 'base'
 
 class Token
-  attr_reader :type, :macth, :pos
+  attr_reader :type, :match, :pos
   def initialize type, match = nil
     @type = type
     @match = match
@@ -17,81 +17,86 @@ class Token
   end
 end
 
-class Match
+class LexerState
+  attr_reader :text, :token, :tokens, :pos
   def initialize text
     @text = text
+    @token = nil
+    @tokens = []
+    @pos = 0
   end
-end
-
-def try_match patt, type, str
-  case patt
-  when Array
-    matched = nil
-    patt.each do |p|
-      if str.start_with? p and
-        (matched.nil? or
-        p.length > matched.length)
-      then matched = p end
+  def consume len
+    @pos += len
+    @text = @text[len .. -1]
+  end
+  def consume_space
+    result = /\s*/.match @text
+    consume result[0].length if result
+  end
+  def try_match patt, type
+    match = nil
+    case patt
+    when Array
+      longest = nil
+      patt.each do |p|
+        if @text.start_with? p then
+          longest = p if is_longer? p, longest
+        end
+      end
+      match = Token.new type, longest if longest
+    when Regexp
+      result = patt.match @text
+      if result.nil? or
+        result.length == 0 or
+        result.begin(0) > 0 or
+        result[0].length == 0
+      then return end
+      match = Token.new type, result[0]
     end
-    return nil if matched.nil?
-    return Token.new type, matched
-  when Regexp
-    result = patt.match str
-    if result.nil? or
-      result.length == 0 or
-      result.begin(0) > 0 or
-      result[0].length == 0
-    then return nil end
-    return Token.new type, result[0]
+    @token = match if is_longer? match, @token
   end
-end
+  def use_token
+    raise "Match is Nil!" if @token.nil?
+    @token.set_pos @pos
+    @tokens.push @token
+    consume @token.length
+    @token = nil
+  end
 
-def consume_space str
-  result = /\s*/.match str
-  unless result.nil?
-    len = result[0].length
-    return str[len .. -1]
+  ## Helpers
+  private
+  def is_longer? newer, older
+    (not newer.nil?) and (older.nil? or newer.length > older.length)
   end
-  return str
 end
 
 def tokenize input
   text = if input.class == String
     then input else input.text end
-  tokens = []
+  state = LexerState.new text
 
   ### Constantes para comparar
   numrgx = /[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?/
   varrgx = /[a-z][a-zA-Z0-9]*/
   strrgx = /\"([^\\^\"]|\\.)*\"/
-  kws = ["do", "elseif","else", "end", "for", "function", "if", "in",
-         "repeat", "then", "until", "while", "local", "break", "return"]
-  cons = ["true", "false", "nil", "..."]
-  ops = ["+", "-", "*", "/", "%", "^", "==", "<=", ">=", "<", ">", "~=",
-         "and", "or", "not", "..", "#"]
-  grammar = [";", "[", "]", "{", "}", "(", ")", ".", ",", "="]
+  kws = %w(do elseif else end for function if in repeat then until while local break return)
+  cons = %w(true false nil ...)
+  ops = %w(+ - * / % ^ == <= >= < > ~= and or not .. #)
+  grammar = %w(; [ ] { } ( ) . , =)
+  # %w es sintaxis especial para arrays de palabras
 
   ### Procedimiento
-  while text.length > 0
-    text = consume_space text
-    match = Match.new text
-    token = nil
-    [ try_match(kws, "kw", text),
-      try_match(ops, "op", text),
-      try_match(cons, "const", text),
-      try_match(numrgx, "num", text),
-      try_match(varrgx, "var", text),
-      try_match(strrgx, "str", text),
-      try_match(grammar, "gmr", text)
-    ].each do |tok|
-      if (not tok.nil?) and (token.nil? or
-        tok.length > token.length) then
-        token = tok
-      end
-    end
-    raise "Unrecognized token. #{text}" if token.nil?
-    tokens.push token
-    text = text[token.length .. -1]
+  while state.text.length > 0
+    state.consume_space
+    state.try_match(kws, :kw)
+    state.try_match(ops, :op)
+    state.try_match(cons, :const)
+    state.try_match(numrgx, :num)
+    state.try_match(varrgx, :var)
+    state.try_match(strrgx, :str)
+    state.try_match(grammar, :gmr)
+    raise "Unrecognized token. #{text}" if state.token.nil?
+    state.use_token
   end
-  return tokens
+  return state.tokens
 end
