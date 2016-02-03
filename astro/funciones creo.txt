@@ -1,0 +1,101 @@
+
+car = Car.new
+
+car.run 5
+
+# Extraer objeto función sin contexto.
+run_thing = car.&run  # Idea 1
+run_thing = car:run   # Idea 2
+run_thing = car::run  # Idea 3 (No me gusta, parece un módulo o clase)
+
+# Extraer función como método (prefiero usar currying)
+run_car = car.&&run   # Idea 1
+
+# Syntaxis para currying, o aplicación parcial
+# Idea 1
+&(car.move) # Aplicación nula, extraer función con contexto
+&(car.move x)     # Aplicación parcial
+&(car.move x, y)  # Aplicación total, función perezosa
+&(car.move x y)   # Idea 1.2 (no me gusta tanto)
+&(car.move, x, y) # Idea 1.3 (menos)
+
+En resumen, & es el operador de referencia de función.
+
+Tengo un problema con las funciones.
+En este lenguaje, las funciones se llaman automáticamente, lo cual es genial porque puedo simplificar la sintaxis para ellas. Es más cómodo de leer (para mí al menos) [... Poner ejemplo aquí XD. En fin, me gusta más, tengo experiencia de Ruby y de Haskell].
+Un grave problema es para las funciones que reciben funciones como argumentos. Por ejemplo, para map sería algo como
+
+map (arr, f) ->
+  narr = []
+  for i in [0 ... arr.length]
+    narr[i] = f narr[i]
+
+Que es muy conveniente, pero si quiero hacer algo como un stack de funciones y hago
+
+push(arr, (x) -> x+1)
+
+Y push está definido como
+
+push (arr, value) ->
+  arr[arr.length] = v
+
+Entonces cada push que haga va a resultar en error porque evaluará la función automáticamente y sin argumentos, y si no recibe argumentos no dará error, pero guardará un resultado en vez de la función en sí.
+
+counter = 5
+add = (x)->counter + x
+inc = (x)->counter = add x
+get = ()->counter
+
+add 3 # Se ejecuta. Genial!
+get   # También se ejecuta. Lindo!
+
+funcs = {}
+funcs.add = add # Se ejecuta y da error!
+funcs.get = get # Guarda el resultado, no la función!
+
+# Suponiendo que logramos guardar las funciones de algún modo, y que las funciones tienen un método mágico para ordenarse
+
+greater = (max funcs.add funcs.get) # Ambas se ejecutan! D:
+
+
+## Solución 1
+
+Usar el operador & como operador de referencia. Y se usan estas reglas:
+
+- Cuando se pasa una función a un argumento, se guarda en una caja automáticamente, venga o no en una, por ejemplo:
+
+    push = (arr, v) ->
+      arr.[arr.length] = v
+    # No hay problema porque si "v" es una función, el lenguaje automáticamente la encaja, y se usa como variable normal. Si "v" era una caja de función, el lenguaje no hace nada, y queda igual como caja de función.
+
+- Para extraer una función de una caja, se usa el mismo operador:
+
+    map = (arr, &f) ->
+      narr = {}
+      for i, v in arr
+        narr[i] = f v
+    # La mención de 'f' la ejecuta, porque se sacó de la caja explícitamente.
+
+- El operador para extraer funciona también con objetos invocables, es decir, si se pasa un objeto común con un atributo '_call', dentro de map se usa como una función corriente.
+
+- Al asignar una variable, o un campo de un objeto, no se cambia el estado de caja.
+
+    fun = (x)->sum_code x   # Esta función es pura
+    box = &fun    # Encajada explícitamente, no se ejecuta
+
+    obj.fun_result = fun  # Es pura, se guarda el resultado (pero da error)
+    obj.box = box         # Se guarda la caja tal cual
+    obj.unbox = &box      # El operador extrae la función de la caja pero no 
+        # la ejecuta, devuelve una función pura
+    obj.other_fun = &&fun   # No tengo idea. Me imagino que puedo encajar una
+        # función pura y luego desencajarla para obtener la misma función pura
+        # pero sin ejecutar... Estoy confundido! D: aunque tiene un poco
+        # de sentido, admítanlo
+    obj.lol = &(fun)  # Ya ni sé para qué quedo esto
+
+## Conclusión
+
+Estoy bastante confundido con esto. Ya sé que quiero usar el operador '&' para manejar la situación, pero tengo que definir bien cómo se usa
+
+
+

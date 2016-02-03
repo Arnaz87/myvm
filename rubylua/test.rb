@@ -8,6 +8,6 @@ text = "...;...123456\"hola\";truefalse true nil...\"mundo\""
 st = ParseState.new text
 
 tokens = tokenize text
-puts tokens
+#puts tokens
 ast = parse tokens
 puts ast

@@ -48,6 +48,9 @@ class ParserState
   def eof?
     @pos >= @tokens.length
   end
+  def fail msg
+    raise "Parse Error: #{msg}. at: #{if eof? then "EOF" else text_pos end}"
+  end
 end
 
 class Parser
@@ -74,7 +77,7 @@ class Parser
   def try_name
     return false if @state.eof?
     tok = @state[0]
-    return tok.match if tok.type != :var
+    return tok.match if tok.type == :var
     return false
   end
 
@@ -84,6 +87,14 @@ class Parser
       return val if val
     end
     return nil
+  end
+
+  def try_fail arg, msg = "Error Parsing"
+    @state.parse msg unless arg
+  end
+
+  def parse_varargs
+    parse_constant :varargs
   end
 
   def parse_constant my_type = nil
@@ -112,12 +123,19 @@ class Parser
     return node
   end
 
-  def parse_varargs
-    parse_constant :varargs
+  def parse_var
+    name = try_name
+    return nil if not name
+    @state.eat
+    return new_node :var, name: name
+  end
+
+  def parse_var_stuff
+
   end
 
   def parse_exp
-    parse_any [:parse_constant, :try_name]
+    parse_any [:parse_constant, :parse_var]
   end
 
   def parse_stat
