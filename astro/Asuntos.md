@@ -1,6 +1,10 @@
 # Asuntos con Astro...
 
-Vale destacar que con este lenguaje, mis prioridades son: Conceptos simples y Sintaxis intuitiva. Aunque me gusta mucho la sintaxis regular, es más bien un poco secundario aquí.
+Vale destacar que con este lenguaje, mis prioridades son: Conceptos simples y Sintaxis intuitiva. Aunque me gustan mucho la sintaxis regular y la sintaxis flexible, es más bien objetivos secundarios en este lenguaje.
+
+Inspiraciones del lenguaje, en orden de importancia.
+Semántica: Lua, Javascript, Io, Ruby
+Gramática: Coffeescript, Ruby, Lua, Haskell
 
 ## Sintaxis de invocación sin paréntesis:
 
@@ -86,7 +90,25 @@ Dato: Esta idea de sintaxis para aplicación parcial no se me ocurrió para curr
 
 ## Encajar Argumentos
 
-Pendiente...
+Inspirado en ruby. Sirve para convertir arrays en argumentos dinámicos y viceversa. Una función `(f, *args)-> f args` puede recibir cualquier número de argumentos, el primero siempre será 'f', y todos los demás son agrupados en el array 'args', por lo tanto `call f, a`, `call f, a, b, c` y `call f` son todos válidos. Del mismo modo, si tengo un array puedo pasarlo como argumento dinámico, ej: `call f, *[a, b]` equivale a `call f, a, b`, y `call f. *[]` equivale a `call f`.
+
+En Astro, se pueden devolver varios valores de las funciones. Normalmente el lenguaje devuelve la última expresión en ejecutarse, pero para devolver varios valores hace falta usar un return explícito y los valores separados por coma (Esto en realidad no está decidido, pero voy a asumir que es así, véase el siguiente punto). El caso es que, si se tiene un array, se puede devolver todo su contenido por separado al igual que se llama una función:
+`return 1, 2, *arr`
+
+## Retorno múltiple
+
+Este asunto surgió pensando en el encaje de argumentos. Como en Lua, en Astro se puede hacer asignación múltiple: `a,b = 1,2`. Las funciones pueden devolver varios argumentos y ser asignados, como en Lua: `a,b = f`, más complejo, mezclando expresiones simples con funciones: `a,b,c,d = 1, g, f`, suponiendo que g devuelve 1 valor y f 2, quedaría `a = 1; b = g; c,d = f`.
+
+Pero el problema, si tengo una función, y quiero que devuelva varios argumentos, qué sintaxis utilizo?
+
+Idea 1: para devolver varios argumentos se usa un `return explícito`. Pero en oneliners, usando `f ()->return a, b` hay dos opciones: la primera es que f recibe un "lambda que bota a", y a "b", y la otra es que el lambda devuelve ambos a y b, y f toma ese lambda como único argumento. Como es ambiguo, lo mejor sería encerrarlo en paréntesis, el cual tiene también muchas formas posibles: `f (()->return a, b), c`, `f ()->(return a, b), c` y
+`f ()->{return a, b}, c`, lo cual me llevó a la segunda idea
+
+Idea 2: se usaría `f ()->(a,b), c` o `f ()->{a,b}, c`. La primera indica que una lista de expresiones es una expresión en sí, y puede (o debe) estar entre paréntesis. La segunda es más clara en decir que es un bloque, pero ahora se confunde con un Array, si es que va a usar esa sintaxis.
+
+Idea 3: otra opción es que no haya sintaxis para ello, lo único que se puede hacer es usar directamente cajas de argumentos: `f ()->*[a,b], c`. No me gusta esta idea.
+
+Me gusta mucho más la segunda idea, pero tengo que elegir alguna variación y pensarlo bien en general...
 
 ## Encajar Funciones. Revisitado
 
@@ -138,4 +160,81 @@ Hay un detalle, y es que parece ser que de algún modo, el operador de asignaci�
     obj.f = (x,y)->nil  # Se guarda una función pura, se invoca sola
     obj.box = &fun      # Se guarda una caja, no se invoca sola
 
-Hay que recordar que el operador de asignación solo es azúcar sintáctico para '_set', pero que por defecto usa una función core, pero una función igual. Es por esto que es un problema, porque sea como sea que se pase una función, al otro lado, siempre termina siendo una caja.
+Hay que recordar que el operador de asignación solo es azúcar sintáctico para '_set', que por defecto usa una función core, pero igual es una función. Es por esto que es un problema, porque sea como sea que se pase una función, al otro lado, siempre termina siendo una caja.
+
+Se me ocurrió una solución echándole cabeza en la buseta. El lenguaje, al encajar una función por argumento, crea un objeto, y ese objeto al igual que todos tiene prototipos. Pero no es el mismo prototipo que una función encajada manualmente. Sirven para lo mismo y se comportan exactamente igual, pero es un prototipo diferente, precísamente para permitirle al lenguaje separarlas.
+O talves en vez de usar un prototipo diferente,  usar el mismo y uno adicional que no hace nada, o usar un prototipo que tiene de prototipo la caja normal.
+
+## Tipos de acceso
+
+Los objetos se han complicado un poco en mi cabeza, tengo que definir como acceder de diferentes maneras a los campos de un objeto, abajo una lista de los tipos de acceso que se me ocurren:
+
+- Acceso simple: Buscar los campos del objeto y sus prototipos.
+- Acceso puro: Buscar solo los campos directamente en el objeto.
+- Acceso común: Buscar con acceso simple la función especial _get y ejecutarla. Si no, usar acceso simple, pero en caso de encontrar una función, ejecutarla.
+
+La sintaxis para acceso común es la normal `obj.field`, la de acceso simple puede ser `obj:field` o `obj.&field`, y no tengo para acceso puro, creo que podría ser `get obj, field`, o algo así.
+Creo que debería invertirlos, ':' es para puro y no hay para simple.
+
+    Object._pure = (key) ->
+      get_field self, key
+    Object._simple = (key) ->
+      (get_field self, key) or (get_protos_field self, key)
+    Object._common = (key, *args) ->
+      (self.simpĺe key) *args
+
+## Acceso puro y encajado de funciones
+
+Cómo accedo a las funciones de un objeto?
+
+- `obj.f` Ejecuta la función automáticamente. Si es caja, la devuelve.
+- `obj:f` Se trae el objeto directamente. Si es una caja la devuelve, pero si es una función pura? La devuelve pura o la encaja?
+- `obj.&f` Qué hace esto?
+- `&obj.f` Creo que aquí obj era una función, se encajó y se accedió a un campo de esa caja.
+- `obj:&f` Guatafó!
+- `&x = f` Si se encaja la parte izquierda qué pasa?
+- `&x = &f` Ni idea
+- `obj.&f = &g` OH POR DIOS!!
+- `&obj:&f = &&g` NOOOOOOOOOO!!!
+
+Tratar de explicar la última:
+Según ella, obj es una función, entonces &obj la encaja y se le pueden asignar campos. ':' asigna directamente un campo ignorando _set, pero el campo es &f y guatafó. Según la sintaxis de argumentos, un argumento con el operador aplicado desencaja automáticamente lo que sea que venía allí, es decir, si se asigna una caja, &f toma la función pura dentro de ella. El doble operador indica que si una función es pura, toma la función pura en sí, no su resultado ni una caja, o sea que según esto, 'g' es una función pura. Pero combinado con &f significa que se está desencajando una función pura, que ya viene sin caja. Qué pasa en esta ocasión?
+
+WOW esto es muy confuso y complicado.
+
+El problema es que hay varios tipos de objetos de funciones.
+
+Explicando la última expresión de arriba, se me ocurrió. Para crear una función, no se usa `f = ()->x`, porque el operador automáticamente la encaja, sino hay que hacer `&f = ()->x`, para indicar que se quiere desencajar al asignar. Pero ahora no sé en qué se diferencia `x.&f=()->y` y `x:&f=()->y`
+Esto es un pelín inconveniente, ahora hay que escribir cosas como
+`carro.&correr = ()->"Corro!"` cuando es más fácil usar
+`carro.correr = ()->"Corro!"`.
+Pero ahora llego a pensar que la asignación común puede adivinar si una función es pura, y la simple no Pero debería se alrevés porque la asignación simple es parte del lenguaje, y la común es azúcar sintáctico, a menos que los haga a ambos operadores fundamentales... O si mejor sigo con mi esquema antiguo de '.' invocando '_get' y separar las cajas automáticas de las manuales
+
+## Conclusiones por ahora
+
+Siendo x un objeto, f una función pura, y b una caja de función, v cualquiera de las tres
+
+- Como expresiones
+  - Uso de variables
+    - `x` y `b` toma la variable tal cual
+    - `f` Ejecuta la función y toma el resultado
+  - Cajas
+    - `&x` Toma la variable tal cual
+    - `&b` Desencaja la función pura
+    - `&f` Encaja la función
+  - `x.v` Acceso común. Trata de usar '_get', y si no, usa acceso simple y luego usa el resultado
+  - `x:v` Acceso puro, no toca cajas
+  - Acceso puro con cajas
+    - `x:&x` Acceso puro y toma la variable tal cual
+    - `x:&b` Acceso puro y extrae la función
+    - `x:&f` Acceso puro y encaja la función
+- Como nombres, del lado izquierdo de una asignación
+  - `v` Uso de variable, solo asigna la expresión
+  - `&v` Extrae y asigna la expresión
+  - `x.v` Usa '_set', y si no, asignación pura sin tocar cajas
+  - `x:v` Asignación pura, sin tocar cajas
+  - `x:&v` Asignación pura, extrayendo
+- La forma `x.&v` No es válida de ningun modo
+- Aún no sé si '&&' es una doble caja, o es un operador por sí solo.
+
+
