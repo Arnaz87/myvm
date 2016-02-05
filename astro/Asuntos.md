@@ -24,7 +24,7 @@ Voy a asumir esto por el resto del documento.
 - `f (g a), b` Alterno
 - `f (g a) b` Haskell
 
-- `g f(a b)` Ruby
+- `g f(a, b)` Ruby
 - `g f a, b` Coffee
 - `g (f a, b)` Alterno
 - `g (f a b)` Haskell
@@ -36,7 +36,7 @@ Voy a asumir esto por el resto del documento.
 - `(h g) a` Haskell, Coffee
 - `h g a` Smalltalk (Smalltalk Hipstersote!)
 
-Por ahora la que más me gusta es Alterno, Haskell es cool pero da problemas en casos como `f 1+2 -4*5 (WTF!)`.
+Por ahora la que más me gusta es Alterno, Haskell es cool pero da problemas en casos como `f 1+2 -4*5 (no sé...)`.
 
 ## Objeto vs Bloque
 
@@ -44,6 +44,10 @@ La sintaxis para crear un objeto es `{x=1,y=2}`, y para crear un bloque para que
 Aquí `x = {a=1}` podría asumir que es un objeto, y aquí `if true {x=2}` lo más probable es que sea un bloque, pero también podría ser un objeto.
 
 La solución que se me ocurrió es que los bloques de una expresión son ilegales, así puedo saber cuándo se usa ';' o ',' como separador, y si no se usa asumo que es un objeto. Pero no me gusta porque restrigne un poco la sintaxis.
+
+Otra idea. Los bloques no son expresiones, son construcciones sintácticas, solo se pueden usar en expresiones como 'if', 'for' etc, o lambdas. Esto nos quita la ambiguedad al usarlos como variables. Pero queda la ambiguedad de usar un bloque o un objeto. Para esto, las expresiones que esperan bloques, si encuentran '{' asumen que es un bloque. Para evitar esto se puede usar paréntesis para indicar que es una expresión.
+
+    if true then ({x=3}) # Objeto
 
 ## Extracción de campos
 
@@ -92,7 +96,7 @@ Dato: Esta idea de sintaxis para aplicación parcial no se me ocurrió para curr
 
 ## Encajar Argumentos
 
-Inspirado en ruby. Sirve para convertir arrays en argumentos dinámicos y viceversa. Una función `(f, *args)-> f args` puede recibir cualquier número de argumentos, el primero siempre será 'f', y todos los demás son agrupados en el array 'args', por lo tanto `call f, a`, `call f, a, b, c` y `call f` son todos válidos. Del mismo modo, si tengo un array puedo pasarlo como argumento dinámico, ej: `call f, *[a, b]` equivale a `call f, a, b`, y `call f. *[]` equivale a `call f`.
+Inspirado en ruby. Sirve para convertir arrays en argumentos dinámicos y viceversa. Una función `(f, *args)-> f args` puede recibir cualquier número de argumentos, el primero siempre será 'f', y todos los demás son agrupados en el array 'args', por lo tanto `call f, a`, `call f, a, b, c` y `call f` son todos válidos. Del mismo modo, si tengo un array puedo pasarlo como argumento dinámico, ej: `call f, *[a, b]` equivale a `call f, a, b`, y `call f, *[]` equivale a `call f`.
 
 En Astro, se pueden devolver varios valores de las funciones. Normalmente el lenguaje devuelve la última expresión en ejecutarse, pero para devolver varios valores hace falta usar un return explícito y los valores separados por coma (Esto en realidad no está decidido, pero voy a asumir que es así, véase el siguiente punto). El caso es que, si se tiene un array, se puede devolver todo su contenido por separado al igual que se llama una función:
 `return 1, 2, *arr`
@@ -240,24 +244,6 @@ Siendo x un objeto, f una función pura, y b una caja de función, v cualquiera 
 - '&&' es un operador que simula doble caja. Si se usa con una función pura, se obtiene esa misma función pura sin ejecutar. A los objetos y cajas los deja igual.
 - El operador '&()' es para currying, no para encajar una expresión. No veo realmente un uso
 
-
-Array.map = (&f) ->
-  narr
-  for i, v in self
-    narr[i] = f self[i]
-  narr
-
-funcs = []
-funcs.push = (v) ->
-  
-Object.get = (key) ->
-  v = self:[key]
-
-Object.set = (key, val) ->
-  if val.is_a ArgFunction
-    self:&[key] = val
-  else self:[key] = val
-
 Para simpificar un poco voy a probar otro esquema:
 Se tiene el operador '&'. Se puede usar con uso de variables y de campos (no con expresiones arbitrarias). Siempre que se use en lado derecho de la expresión, actúa como caja. Si se usa en el lado izquierdo, funciona como extractor. Este comportamiento se parece al de C++ con el operador de referencia '&', creo, no uso C++.
 
@@ -274,27 +260,64 @@ Hay varios tipos de caja diferentes. El primero es BoxedFunction, que es el que 
 
     funcs = []
     funcs.push = (v) ->
+      self[self.length] = v
 
-    Object._get = (key) ->
+    Object._set = (key, val)
+      # Auto significa que el programa la encajo al pasar por el argumento
+      # pero antes de ser enviada era pura
+      if val.isa Box and v._box_type == :Auto
+        self:&[key] = val
+      else self:[key] = val
+
+    Object._get = (key, *args) ->
+      # Aquí encajamos la función
       v = self:&[key]
       if not v
-        for _,p in self:_protos
-          v = self:&[key]
-          if v then break
-      if v.isa Box and v.type == :AutoBox then
+        for _,p in self.protos
+          v = self[key] *args
+          if v then return v
+      # Acabo de encajarla, si es Function, significa que era pura antes de
+      # hacerlo, si hubiera sido una caja antes de encajarla, sería Box
+      if v.isa Box
+        match v._box_type
+          :Function do return v.call *args
+          :Box do v._previous
+      return v
 
+
+    sub = funcs[:sub]
+    sub 3 4 # error, sub no es función, las cajas no son funciones
+    &sub 3 4  # &sub no es uso de variable, es una función pura
+    sub.call 3 4 # esto sí funciona
+    &add = funcs[:add]
+    add 3 4 # Esto sí funciona, es uso de variable y add es función
+
+## Conclusión 2
+
+El operador '&', de lado derecho de una expresión "encaja", y del lado izquierdo "extrae".
+
+Una caja es una instancia de 'Box'. El prototipo de box tiene los métodos: 'type': devuelve el tipo de caja, 'call': que llama la función contenida, 'previous': que depende del tipo de caja.
+Al encajar un objeto común, no le pasa nada. A una función, devuelve una caja de tipo 'Function'. A una caja existente, devuelve una caja de tipo 'Box'.
+La caja de tipo 'Function', al usar 'previous', se devuelve la función pura (no se usa), y a la de tipo 'Box', devuelve la caja anterior.
+Se puede usar la función contenida, no importa qué tan adentro esté en las cajas, con el método 'call'.
+La función 'Box.type' recibe un objeto como argumento, si es una caja, devuelve el tipo, y devuelve nil si no es una caja.
+
+Hay expresiones que pueden crear una función pura, sin encajarla o usarla. A estas les digo "caja fugaz". Estas funciones pierden su capacidad de ser usadas como objetos una vez que se asignan a una variable. Una de estas expresiones que puede crear una "caja fugaz" es el acceso puro, con el operador ':', y otra es el operador lambda '()->'.
+
+Hay que aclarar que las cajas fugaces no son cajas, es solo que la mayoría de las funciones están en variables, y las variables casi siempre se 'usan', así que es muy difícil acceder a una función pura sin usarla o encajarla. Estas expresiones devuelven funciones puras sin usarlas o encajarlas. Y las veces que se manejan funciones puras, estas se comportan como objetos y parecen cajas aunque no lo sean.
 
 ## Flexibilidad de bloques
 
 Con las expresiones 'if', 'for', 'while' y todas esas, quiero que sean muy flexibles. Por eso, propongo esta sintaxis, para que se pueda escribir con la menor cantidad de símbolos y palabras claves posibles.
-En definición de gramática, entre dos tokens siempre se asume espacio arbitrario pero no nuevas líneas, 'nospace' indica que no debe haber espacio, y 'anyspace' significa que puede haber cualquier cantidad de espacios y nuevas líneas.
-También de algún modo, el analizador léxico puede distinguir mágicamente cuando el analizador sintáctico separa ident de newline
+En esta definición de gramática, entre dos tokens siempre se asume espacio arbitrario pero no nuevas líneas, 's!' indica que no debe haber espacio, y 'nl' es nueva línea.
+También de algún modo, el analizador léxico puede distinguir mágicamente cuando el analizador sintáctico separa ident de nl
 
     block := '{' seq '}' | ident seq unident
-    seq := { exp (';' | newline) }
+    seq := { exp (';' | nl) }
     ifstat := 'if' exp ['then'] (block | exp) ['else' (block | exp)]
     exp := access | use | binop
-    use := (var | var nospace '.' nospace name) {exp ','}
-    binop := exp 'op' [newline] exp
+    use := (var | var s! '.' s! name) [exp {',' exp}]
+    var := name | var s! ['.' | ':' | ':?' ] s! (name | '[' exp ']' )
+    binop := exp 'op' [nl] exp
 
 
