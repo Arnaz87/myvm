@@ -55,6 +55,8 @@ Tenía pensada la sintaxis `carro.&correr`, pero tengo que pensarlo bien porque 
 
 Por si lo cambiaba, también se me ocurrió usar `carro:correr`, y me gusta bastante la verdad.
 
+Por todo lo que he hablado más abajo, el operador de acceso a campos será ':'
+
 ## Uso de funciones como objetos
 
 Con una función `inc = (x)->x+1`, puedo usar `inc 5` y funciona como debe, ejecutando la función. Pero que pasa cuando quiero usar esa función como objeto y pasarla a funciones o asignarla a algo?
@@ -235,6 +237,64 @@ Siendo x un objeto, f una función pura, y b una caja de función, v cualquiera 
   - `x:v` Asignación pura, sin tocar cajas
   - `x:&v` Asignación pura, extrayendo
 - La forma `x.&v` No es válida de ningun modo
-- Aún no sé si '&&' es una doble caja, o es un operador por sí solo.
+- '&&' es un operador que simula doble caja. Si se usa con una función pura, se obtiene esa misma función pura sin ejecutar. A los objetos y cajas los deja igual.
+- El operador '&()' es para currying, no para encajar una expresión. No veo realmente un uso
+
+
+Array.map = (&f) ->
+  narr
+  for i, v in self
+    narr[i] = f self[i]
+  narr
+
+funcs = []
+funcs.push = (v) ->
+  
+Object.get = (key) ->
+  v = self:[key]
+
+Object.set = (key, val) ->
+  if val.is_a ArgFunction
+    self:&[key] = val
+  else self:[key] = val
+
+Para simpificar un poco voy a probar otro esquema:
+Se tiene el operador '&'. Se puede usar con uso de variables y de campos (no con expresiones arbitrarias). Siempre que se use en lado derecho de la expresión, actúa como caja. Si se usa en el lado izquierdo, funciona como extractor. Este comportamiento se parece al de C++ con el operador de referencia '&', creo, no uso C++.
+
+Igual, el lenguaje sigue encajando automáticamente en los pasos entre funciones
+
+Hay varios tipos de caja diferentes. El primero es BoxedFunction, que es el que tiene una función pura luego de ser encajada manualmente, el segundo es BoxedBox, que es cuando se encaja una caja, el tercero es AutoBox, que es cuando el programa encaja una función pura al pasarla como argumento.
+
+
+    Array.map = (&f) ->
+      narr
+      for i, v in self
+        narr[i] = f self[i]
+      narr
+
+    funcs = []
+    funcs.push = (v) ->
+
+    Object._get = (key) ->
+      v = self:&[key]
+      if not v
+        for _,p in self:_protos
+          v = self:&[key]
+          if v then break
+      if v.isa Box and v.type == :AutoBox then
+
+
+## Flexibilidad de bloques
+
+Con las expresiones 'if', 'for', 'while' y todas esas, quiero que sean muy flexibles. Por eso, propongo esta sintaxis, para que se pueda escribir con la menor cantidad de símbolos y palabras claves posibles.
+En definición de gramática, entre dos tokens siempre se asume espacio arbitrario pero no nuevas líneas, 'nospace' indica que no debe haber espacio, y 'anyspace' significa que puede haber cualquier cantidad de espacios y nuevas líneas.
+También de algún modo, el analizador léxico puede distinguir mágicamente cuando el analizador sintáctico separa ident de newline
+
+    block := '{' seq '}' | ident seq unident
+    seq := { exp (';' | newline) }
+    ifstat := 'if' exp ['then'] (block | exp) ['else' (block | exp)]
+    exp := access | use | binop
+    use := (var | var nospace '.' nospace name) {exp ','}
+    binop := exp 'op' [newline] exp
 
 
