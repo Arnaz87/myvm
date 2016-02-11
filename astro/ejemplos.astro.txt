@@ -1,0 +1,74 @@
+# Algunos ejemplos de astro para definir la sintaxis del lenguaje
+
+# Factorial Recursivo
+factorial = (x) ->
+  if x == 0
+  then 1
+  else x * factorial (x-1)
+
+# Factorial Pocedural
+factorial = (x) ->
+  r = 1
+  for i in [1..x]
+    r = r*i
+
+# Factorial OOP
+factorial = (x) ->
+  r = 1
+  x.count (i) ->
+    r = r*i  # r es global a menos que exista una local
+
+# Factorial Super Funcional
+factorial = (x) ->
+  [1..x].fold (a,b)->a*b
+  [1..x].fold %op(*) # Talves así?
+
+# Secreto
+secret = "lol"
+fun = ->
+  me = {}
+  secret = ""
+  me.shh = (str) ->
+    secret = str
+  me.say = ->
+    return secret
+  return me
+jhon = fun
+my_secret = "Peter likes Mary!"
+jhon.shh my_secret
+jhon.say == my_secret
+secret != my_secret
+
+#=# Esto es CoffeeScript, traducir a Astro
+    class Animal
+      constructor: (@name) ->
+
+      move: (meters) ->
+        alert @name + " moved #{meters}m."
+
+    class Snake extends Animal
+      move: ->
+        alert "Slithering..."
+        super 5
+
+    class Horse extends Animal
+      move: ->
+        alert "Galloping..."
+        super 45
+
+    sam = new Snake "Sammy the Python"
+    tom = new Horse "Tommy the Palomino"
+
+    sam.move() # > "Slithering..." "Sammy the Python moved 5m."
+    tom.move() # > "Galloping..." "Tommy the Palomino moved 45m."
+#=#
+
+class Animal
+  sayname = (anml) ->
+    print anml.name
+  _init = (name) =>
+    @name = name
+  move = (meters) =>
+    print "#{@name} moved #{meters}"
+
+class
