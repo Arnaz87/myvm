@@ -65,6 +65,14 @@ def testneq (a, b):
   print(repr(a) + " != " + repr(b))
   test(a != b)
 
+def testerr (f):
+  passed = true
+  try:
+    f()
+  except Exception, e:
+    passed = false
+  test(passed)
+
 carro = Carro()
 
 T("Clase Carro")
@@ -154,6 +162,28 @@ testneq( nc() , c() )
 # pueden definir métodos especiales, pero estos no son para que ellas las usen,
 # son para que las instancias de esa clase los use. Python2 sí considera los
 # atributos de la instancia para los métodos especiales.
+
+
+## Sobrecarga de Operadores
+class A:
+  def __add__(self, other):
+    return "add A"
+class B:
+  def __add__(self, other):
+    return "add B"
+a = A()
+b = B()
+
+T("Object add num")
+testeq(a+1, "add A")
+T("Num add object")
+testerr(lambda: 1+a)
+# Python no acomoda los argumentos. Número no sobrecarga add, y como falla,
+# ahí queda, no trata de sumar los argumentos al revés
+T("A add B")
+testeq(a+b, "add A")
+T("B add A")
+testeq(a+b, "add B")
 
 gatr = object.__getattribute__
 carro = Carro()

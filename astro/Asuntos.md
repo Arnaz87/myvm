@@ -33,8 +33,8 @@ Voy a asumir esto por el resto del documento.
 - `g g(a)` Ruby
 - `g (g a)` Haskell, Alterno
 
-- `(h g) a` Haskell, Coffee
-- `h g a` Smalltalk (Smalltalk Hipstersote!)
+- `(h g) a` Coffee, Alterno
+- `h g a` Haskell (Real), Smalltalk
 
 Por ahora la que más me gusta es Alterno, Haskell es cool pero da problemas en casos como `f 1+2 -4*5 (no sé...)`.
 
@@ -48,6 +48,18 @@ La solución que se me ocurrió es que los bloques de una expresión son ilegale
 Otra idea. Los bloques no son expresiones, son construcciones sintácticas, solo se pueden usar en expresiones como 'if', 'for' etc, o lambdas. Esto nos quita la ambiguedad al usarlos como variables. Pero queda la ambiguedad de usar un bloque o un objeto. Para esto, las expresiones que esperan bloques, si encuentran '{' asumen que es un bloque. Para evitar esto se puede usar paréntesis para indicar que es una expresión.
 
     if true then ({x=3}) # Objeto
+
+Coffeescript no encierra bloques en llaves, solo son sequencias, y el parser para sequencias es hambriento... Es complicado de explicar. Solo introduce estas expresiones en el compilador de muestra de coffeescript:
+
+    arr.each () -> a=1; b=2; c=3
+    (arr.each () -> a=1; b=2); c=3
+    arr.each () -> (a=1; b=2; c=3)
+    arr.each () -> {a:1; b:2; c:3}
+    arr.each () -> {a=1; b=2; c=3} # Ilegal
+    arr.each () -> a:1; b:2; c:3
+    if cond then x=1; y=2
+    if cond then x:1; y:2
+    if cond then x=1; y: 2; z: if x then y=1; z=2
 
 ## Extracción de campos
 
@@ -317,7 +329,18 @@ También de algún modo, el analizador léxico puede distinguir mágicamente cua
     ifstat := 'if' exp ['then'] (block | exp) ['else' (block | exp)]
     exp := access | use | binop
     use := (var | var s! '.' s! name) [exp {',' exp}]
-    var := name | var s! ['.' | ':' | ':?' ] s! (name | '[' exp ']' )
-    binop := exp 'op' [nl] exp
+    var := name | var s! [':' | ':?' ] s! (name | '[' exp ']' )
+    use := name
+    binop := exp op [nl] exp |
+
+## Métodos
+
+Las funciones no tienen dueños. No existen variables ocultas como 'self', todo es explícito.
+
+Los métodos son funciones especiales que están asociadas a un objeto y operan sobre él. No es una característica que viene construida en el lenguaje, es solo un objeto común que puede ser simulado manualmente, pero al que lenguaje le ofrece azúcar sintáctico.
+
+    Method =
+      new = (func) ->
+
 
 
