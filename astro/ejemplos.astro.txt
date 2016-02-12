@@ -98,3 +98,153 @@ tom = Horse.clone.append {name = "Tommy the Palomino"}
 
 sam.move
 tom.move
+
+##===## Factores (Para probar composición)
+#=# Haskell
+  factors n = [x | x <- [2..n], n `mod` x == 0]
+  isblack = even . length . factors
+  blacks n = filter black [1..n]
+#=#
+
+# Con sintaxis básica
+factors = (n) -> [2..n].filter (x) -> n%x == 0
+black? = (xs) -> xs.length.even?
+blacks_to = (n) -> [1..n].filter (x) -> black? x
+
+# Con macros %
+factors = (n) -> [2..n].filter %compose(%op(==0), %op(n%)) # Asqueroso
+blacks_to = (n) -> [1..n].filter %f(black?)   # Feo
+
+# Con sintaxis tipo Haskell
+factors = (n) -> [2..n].filter ((==0) . (n%)) # Bonito
+black? = (.even? . .length)     # Feo, muchos puntos
+blacks_to = (n) -> [1..n].filter black? # Se rompe
+  # Con la semántica actual, black? se está invocando sin argumentos
+
+# Otros intentos
+[1..n].filter $black? # Usando el selector de objeto $
+[1..n].filter (.even . .length) # El operador . devuelve una función
+[1..n].filter (_.even · _.length) # Con otra sintaxis...
+
+# Con variables indefinidas y sintaxis funcional
+factors = (n) -> [2..n].filter (n%_ |> _==0)
+black? = _.length |> _.even?
+blacks_to = (n) -> [1..n].filter $black?
+# Un pelo críptico, pero me gusta hacia donde está yendo
+
+factors = (n) -> [2..n].filter (n%) ~> (==0)
+black? = (_.length) ~> (_.even?)
+blacks_to = (n) -> [1..n].filter $black?
+
+# Con métodos
+factors = (n)-> [2..n].filter (=> n%@==0)
+black? = => @.length.even?
+blacks_to = (n)-> [1..n].filter (=> black? @)
+# Esto ya se alejó del estilo funcional, pero también me gusta mucho, y no
+# es tan críptico
+
+
+##===## Brainfuck
+program = load_file "test.bf"
+inst = 0
+next = 0
+stack = []
+
+heap = [0] * 256
+pointer = 0
+_inc_pointer = -> pointer := pointer+1 % 256
+_dec_pointer = -> pointer := pointer-1 % 256
+_inc_cell = -> heap[pointer]++
+_dec_cell = -> heap[pointer]--
+
+codes = {}
+codes['<'] = -> pointer--
+codes['>'] = -> pointer++
+codes['+'] = -> cell++
+codes['-'] = -> cell--
+codes['['] = -> stack.push inst
+codes[']'] = -> next = stack.pop
+codes:_missing = -> # Función vacía
+
+while true
+  next := inst+1
+  codes[program[inst]].call
+  # 'call' significa que la función no se está llamando sola
+  inst := next
+
+# Creación de objeto
+# Modo Básico
+  codes = {}
+  codes['<'] = -> pointer--
+  codes['>'] = -> pointer++
+  codes['+'] = -> cell++
+  codes['-'] = -> cell--
+  codes['['] = -> stack.push inst
+  codes[']'] = -> next = stack.pop
+  codes:_missing = -> # Función vacía
+# Modo tipo Coffee
+  codes =
+    '<': -> pointer--
+    '>': -> pointer++
+    '+': -> celĺ++
+    '-': -> cell--
+    '[': -> stack.push inst
+    ']': -> next := stack.pop
+    _missing: ->
+# Modo tipo Lua
+  codes =
+    '<' = -> pointer--
+    '>' = -> pointer++
+    '+' = -> celĺ++
+    '-' = -> cell--
+    '[' = -> stack.push inst
+    ']' = -> next := stack.pop
+    _missing = ->
+# Me gusta más el modo Coffee. No tenía pensado que la creación de objeto
+# se tratara de accesos puros, pero la sintaxis de Coffee parce indicar eso,
+# y la verdad me gusta.
+
+# hmm hay unproblema aquí...
+# Las funciones de brainfuck no son automáticas, pero '_missing' sí es un
+# método. Creo que la solución podría ser que '.' use '_send', y '[]' use
+# '_get', de ese modo, _send usa automáticamente y _get solo saca
+# Posible solución
+  codes =
+    '<': &-> pointer--
+    '>': &-> pointer++
+    '+': &-> celĺ++
+    '-': &-> cell--
+    '[': &-> stack.push inst
+    ']': &-> next := stack.pop
+    &_missing: ->
+# Aquí, el operador '&' del lado derecho, encaja lo que sea, y del lado
+# izquierdo, desencaja lo que sea.
+
+##===## Base del Lenguaje
+Lang :: constant immutable =
+  get: (obj, name) ->
+    Magia_Negra!
+  send: (obj, *args) ->
+    Magia_Negra!
+Object :: constant immutable =
+  _protos: nil
+  _send: (name, *args) =>
+    v = @_get name
+    if function? v
+      v.call *args
+    elif args.any? then v
+    else raise!
+  _get: (key) =>
+    v = @:[key]
+    for p in @:_protos
+      v or= p._get key
+    return v
+o = clone Object
+obj.lol   # Lang:send obj, :lol
+obj[lol]  # Lang:get obj, lol
+o:lol     # es una forma sintáctica pura
+obj.(lol) # Lang:send obj, lol
+obj:[lol] # tiene que ver con el otro :
+.lol      # (x) -> x.lol
+.(lol)    # (x) -> x.(lol)
+

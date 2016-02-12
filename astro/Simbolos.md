@@ -39,8 +39,8 @@ ASCII sin uso:
 Símbolos no ASCII sin uso
 ` ¡ ¿ ´ ¸ ¨ · ¬ ° ¦ « » ± × ÷ `
 
-Combinaciones comunes sin uso
-` <- !! ... ?? :: -- %% // \\ /* */ := ::= ~= \= |= === `
+Combinaciones posibles sin uso
+` <- !! ... ?? :: -- %% // \\ /* */ := ::= ~= \= |= === <| |> <$ $> ~> <~ `
 
 Operadores binarios Usados:
 ` + - / % & | ^ && || ^^ ** ++ `
