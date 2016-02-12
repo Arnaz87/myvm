@@ -21,7 +21,10 @@ factorial = (x) ->
 # Factorial Super Funcional
 factorial = (x) ->
   [1..x].fold (a,b)->a*b
-  [1..x].fold %op(*) # Talves así?
+  [1..x].fold %op(*)  # Talves así?
+  [1..x].fold (*)     # Esto sería perfecto!
+  [1..x].fold ^a,b -> a*b
+  [1..x].fold \a,b -> a*b
 
 # Secreto
 secret = "lol"
@@ -63,6 +66,7 @@ secret != my_secret
     tom.move() # > "Galloping..." "Tommy the Palomino moved 45m."
 #=#
 
+# Herencia con clases, 1er intento
 class Animal
   sayname = (anml) ->
     print anml.name
@@ -71,4 +75,26 @@ class Animal
   move = (meters) =>
     print "#{@name} moved #{meters}"
 
-class
+
+# Herencia con prototipos, 1er intento
+Animal =
+  move = (meters) =>
+    print "#{@name} moved #{meters}"
+
+Snake =
+  _protos = [Animal]
+  move = () =>
+    print "Slithering..."
+    @super.move 5
+
+Horse =
+  _protos = [Animal]
+  move = () =>
+    print "Galloping..."
+    @super.move 5
+
+sam = Snake.clone.append {name = "Sammy the Python"}
+tom = Horse.clone.append {name = "Tommy the Palomino"}
+
+sam.move
+tom.move

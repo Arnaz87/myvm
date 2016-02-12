@@ -18,7 +18,7 @@ Operadores usados:
 - `&& || ^^ !` Operadores lógicos
 - `& | ^ ~ << >>` Operadores binarios
 - `? !` Final de algunos nombres
-- `-> =>` Creador de funciones
+- `->` Creador de funciones
 
 Operadores en discusión:
 
@@ -31,13 +31,25 @@ Operadores en discusión:
 - `%` Macros
 - `&` Creador de cajas
 - `*` Agrupador de argumentos
+- `=>` Creador de métodos
 
 ASCII sin uso:
 `` \ ? ! ` ``
 
 Símbolos no ASCII sin uso
-` ¡ ¿ ´ ¸ ¨ · ¬ ° ¦ « » `
+` ¡ ¿ ´ ¸ ¨ · ¬ ° ¦ « » ± × ÷ `
 
 Combinaciones comunes sin uso
 ` <- !! ... ?? :: -- %% // \\ /* */ := ::= ~= \= |= === `
 
+Operadores binarios Usados:
+` + - / % & | ^ && || ^^ ** ++ `
+
+Prefijos Usados:
+` - ~ ! : `
+
+Prefijos en Discusión:
+` & * $ @ `
+
+Prefijos libres:
+` % + \ / ¬ `
