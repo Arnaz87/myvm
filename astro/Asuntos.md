@@ -335,7 +335,7 @@ También de algún modo, el analizador léxico puede distinguir mágicamente cua
 
 ## Métodos
 
-Las funciones no tienen dueños. No existen variables ocultas como 'self', todo es explícito.
+Las funciones no tienen dueños. No existen variables ocultas como 'self', todo es explícito. 
 
 Los métodos son funciones especiales que están asociadas a un objeto y operan sobre él. No es una característica que viene construida en el lenguaje, es solo un objeto común que puede ser simulado manualmente, pero al que lenguaje le ofrece azúcar sintáctico.
 
