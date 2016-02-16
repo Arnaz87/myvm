@@ -58,18 +58,28 @@ module Brainfuck execute;
 import std.file;
 // No voy a usar esto, en cambio voy a usar std.file.readFileContents
 string loadFile (string fileName) {
-  std.file.File file = std.file.getFileByName(fileName, std.file.Read);
+  std::file::File file = std::file::getFileByName(fileName, std.file.Read);
   return file.readContents();
 }
 const heapSize = 256;
+struct BrainfuckHeap {
+  &Array<int, heapSize> heap = Array<int, heapSize>;
+  int pos = 0;
+}
+methods BrainfuckHeap {
+  void inc () { this.heap[this.pos] = this.heap[this.pos] + 1; }
+  void dec () { this.heap[this.pos] = this.heap[this.pos] - 1; }
+  void fwd () { this.pos = this.pos + 1; }
+  void bck () { this.pos = this.pos - 1; }
+}
 void execute (string program) {
   int pos = 0;
   // Quiero que este array esté en el Stack, pero no sé cómo hacerlo si:
   // - No tengo sintaxis para hacerlo.
   // - Los mecanismos para saber el tamaño de la clase no funcionan
   //   con arrays porque ¡Son de tamaño variable!.
-  Array<int> = new Array<int>(heapSize);
-  while (pos < Container.length(program) /*program.length()*/) {
+  &Array<int> heap = new Array<int>(heapSize);
+  while (pos < program.length()) {
 
   }
 }
@@ -106,3 +116,86 @@ Hay otro tipo nativo de tamaño variable que se me ocurrió: El Bytefield (Tambi
 Creo que el Bytefield puede usarse como tipo básico, siendo la única excepción de tamaño variable, y los arrays implementarse sobre estos.
 
 Hay un problema con los Bytefields: No se pueden implementar en Javascript o en Java, o al menos no muy fácilmente. Talvés esto se pueda solucionar poniendo algunas reglas, porque ya de por sí esta estructura es muy peligrosa, y poco compatible entre diferentes plataformas, por el endianness y la manera de representar los datos.
+
+## [2016-02-16 10:06] Gramática para tipos
+
+Intento de gramática para declaración de tipos de variables
+
+    decl := type ident '=' def
+    type := ident | class | func
+    class := ['&'] ident ['<' {(ident|int)} '>']
+    func := 'func' (type | '(' {type} ')') (type | '(' {type} ')')
+
+    # semantic phase
+    primitive-ident :=
+        'int'|'float'|'bool'|'byte'|'var'|'void'|
+        (('u'|'i'|'f') ('8'|'16'|'24'|'32'))
+
+## [2016-02-16 10:23] Otra Sintaxis
+
+Una sintaxis alterna, mucho más fea, pero más clara, tratando todo como si fueran clases, incluso los primitivos.
+
+```c++
+// === Factorial
+// Integer es un Trait
+// Int es una clase
+// Arithmetic es un Trait
+proc factorial <(Integer x), (Integer)> {
+  if (Eq.eq(x, Int<0>)) {return Int<1>;}
+  return Arithmetic.mul(x, factorial(Arithmetic.dec(x)))
+};
+proc factorialr <(Integer x, Integer y), (Integer)> {
+  if (Eq.eq(x, Int<0>)) {return y;}
+  tailcall factorialr(Arithmetic.dec(x), Arithmetic.mul(x, y));
+  // 'tailcall' hace lo mismo que 'return'
+};
+
+// === Estructura de Arbol
+class Tree<T> {
+  structure {
+    T value = null;
+    Tree<T> left = null;
+    Tree<T> right = null;
+  };
+  methods {
+
+  };
+};
+
+class Tree of T begin
+  declare value as T
+  declare left as Tree of T
+  declare right as Tree of T
+end
+
+declare size as (Constant of (Integer of 32))
+class HashPair of T begin
+  declare key as String;
+  declare value as T;
+  method isKey as Bool taking (other String) begin
+    return Eq.eq(this.key, other);
+  end
+end
+class HashEntry of T begin
+  declare key as String;
+  declare value as T;
+  declare next as HashEntry of T;
+   find of T taking (query as String) begin
+    if Eq.eq(this.key, query) then 
+      return this.value;
+    else
+      return HashEntry.find(this.next, )
+    end;
+  end
+end
+class HashTable of T begin
+  declare arr as Array of (List of T, size);
+  method find of Void taking (key as String) begin
+    declare hash as Int of 32;
+    declare field as List of T;
+    hash := Hashable.getHash(key);
+    field := Array.get(this.arr);
+
+  end;
+end;
+```
