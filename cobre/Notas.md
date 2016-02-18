@@ -121,6 +121,13 @@ Hay un problema con los Bytefields: No se pueden implementar en Javascript o en 
 
 Intento de gramática para declaración de tipos de variables
 
+    def := vardef | fundef | typedef
+    vardef := type ident '=' exp
+    fundef := 'fun' type {',' type} ident paramlist block
+      paramlist := '(' param {',' param} ')'
+      param := type ident
+    typedef := type
+
     decl := type ident '=' def
     type := ident | class | func
     class := ['&'] ident ['<' {(ident|int)} '>']
@@ -131,71 +138,13 @@ Intento de gramática para declaración de tipos de variables
         'int'|'float'|'bool'|'byte'|'var'|'void'|
         (('u'|'i'|'f') ('8'|'16'|'24'|'32'))
 
-## [2016-02-16 10:23] Otra Sintaxis
+## [2016-02-17 18:42]
 
-Una sintaxis alterna, mucho más fea, pero más clara, tratando todo como si fueran clases, incluso los primitivos.
-
-```c++
-// === Factorial
-// Integer es un Trait
-// Int es una clase
-// Arithmetic es un Trait
-proc factorial <(Integer x), (Integer)> {
-  if (Eq.eq(x, Int<0>)) {return Int<1>;}
-  return Arithmetic.mul(x, factorial(Arithmetic.dec(x)))
-};
-proc factorialr <(Integer x, Integer y), (Integer)> {
-  if (Eq.eq(x, Int<0>)) {return y;}
-  tailcall factorialr(Arithmetic.dec(x), Arithmetic.mul(x, y));
-  // 'tailcall' hace lo mismo que 'return'
-};
-
-// === Estructura de Arbol
-class Tree<T> {
-  structure {
-    T value = null;
-    Tree<T> left = null;
-    Tree<T> right = null;
-  };
-  methods {
-
-  };
-};
-
-class Tree of T begin
-  declare value as T
-  declare left as Tree of T
-  declare right as Tree of T
-end
-
-declare size as (Constant of (Integer of 32))
-class HashPair of T begin
-  declare key as String;
-  declare value as T;
-  method isKey as Bool taking (other String) begin
-    return Eq.eq(this.key, other);
-  end
-end
-class HashEntry of T begin
-  declare key as String;
-  declare value as T;
-  declare next as HashEntry of T;
-   find of T taking (query as String) begin
-    if Eq.eq(this.key, query) then 
-      return this.value;
-    else
-      return HashEntry.find(this.next, )
-    end;
-  end
-end
-class HashTable of T begin
-  declare arr as Array of (List of T, size);
-  method find of Void taking (key as String) begin
-    declare hash as Int of 32;
-    declare field as List of T;
-    hash := Hashable.getHash(key);
-    field := Array.get(this.arr);
-
-  end;
-end;
+```c
+module me.Collections;
+require Core.Arithmetic;
+require Std.Collections;
+class LinkedList <T> {
+  
+}
 ```
