@@ -56,3 +56,7 @@ Gramática tipo BNF completa:
 
 El módulo es una lista de constantes, y una de ellas es el módulo en sí, indicando cuáles de esas constantes son visibles para los otros módulos.
 
+## [2016-02-18 13:12] Constantes
+
+El módulo declara constantes, que luego podrán usarse en las definiciones. Las constantes son cosas como Clases, Strings, Números, que se usarán muchas veces y no deben cambiar con el tiempo, o que la máquina virtual usa. Aquí se incluyen las clases y traits de las variables de las funciones, y los nombres también.
+
