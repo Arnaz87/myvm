@@ -1,0 +1,19 @@
+## [2016-02-22 11:45] Ejemplo 1
+
+t = {}
+t.a = 1
+
+## Compiled
+
+LuaValue
+
+LuaObject (CoreClass) {}
+NewLuaObject (Constructor) {}
+
+_const1 (String) {"a"}
+_const2 (Number) {1}
+
+main (Function) {
+  t:Lua = NewLuaObject()
+  t.set(_const1, _const2)
+}
