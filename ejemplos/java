@@ -1,3 +1,23 @@
+## [2016-03-07 16:48] Una Clase
+
+class MyClass {}
+static void main () {
+  MyClass o = new MyClass();
+}
+
+### Compilado
+
+JavaClass (Import) = Java.Class
+MyClass (Class) {}
+_ (Trait Impl) {
+  trait Class
+  args MyClass
+}
+
+main (Function) {
+  o: MyClass = new MyClass
+}
+
 ## [2016-02-22 09:30] Ejemplo 1
 
 ### Java
@@ -93,34 +113,40 @@ data Gato
 instance Animal Gato where
   hablar _ = print "Miau!"
 
-// Esto es imposible, porque la función es paramétrica
-// Si se parametriza la función como nombrar<Perro>, usarla con un Gato no
-// tiene sentido. Por esto esta opción no sirve
+
 nombrar :: (Animal a) => a -> IO String
 nombrar Perro = print "perro"
 nombrar Gato = print "gato"
 nombrar _ = print "animal"
+// Este método usa Downcasting (recuperar el tipo original de la variable),
+// que no existe en Haskell (hay algo parecido en los Traits).
 
-// Esta es la única opción que queda...
+nombrar :: Gato  -> IO String = print "gato"
+nombrar :: Perro -> IO String = print "perro"
+nombrar :: (Animal a) => a -> IO String = print "animal"
+// Este método usa Multiple Dispatch (la función recibe diferentes
+// tipos de argumentos y se comporta diferente con cada uno),
+// que no existe en Haskell.
+
+
 nombrarGato :: Gato -> IO String
 nombrarGato _ = print "gato"
 nombrarPerro :: Perro -> IO String
 nombrarPerro _ = print "gato"
 nombrarAnimal :: (Animal a) => a -> IO String
 nombrarAnimal _ = print "animal"
-
-// En haskell no existe Downcasting, por eso 'nombra', cómo está
-// en Java, es imposible
+// La única opción es diferenciar los métodos por nombre, y usar el
+// nombre que tenga el tipo correcto.
 
 main = do
   g <- Gato
   p <- Perro
   ag <- g :: Animal
   ap <- p :: Animal
-  hablar ag
-  hablar ap
-  hablarGato g
-  hablarAnimal ag
+  hablar ag   // Miau!
+  hablar ap   // Wurf!
+  nombrarGato g     // gato
+  nombrarAnimal ag  // animal
 
 
 ### Compiled
@@ -192,21 +218,3 @@ main (Function) {
   a:Animal = g
 }
 
-## [2016-02-22 13:05] Una Clase
-
-class MyClass {}
-static void main () {
-  MyClass o = new MyClass();
-}
-
-### Compiled Primera Versión
-
-MyClass (Class) {
-  $supers [JavaObject]
-}
-MyClass_new (Constructor) {
-  $class MyClass
-}
-main (Function) {
-  o:MyClass = MyClass_new()
-}
