@@ -333,3 +333,52 @@ Otra opción es que, además de las funciones (y clases) comunes, existan funcio
 
 Me parece que la solución más limpia son los módulos paramétricos. Lo que hay que hacer para que no desordene el sistema de módulos de los lenguajes es pensar en un sistema estándar para determinar cuando un módulo debe ser una función, una clase, un módulo común, o cualquier otra cosa.
 
+## [2016-03-10 10:39] Registros especiales
+
+Si los argumentos en vez de pasarse por un stack especial, se pasan como un objeto común, entonces bien pueden ser registros comúnes de la función. Entonces el código podría usar los parámetros directamente, algo así:
+
+    a = Args[0]
+    b = dostuff(a)
+    Args[0] = b
+    end
+
+Se simplificaría
+
+    _return dostuff(_param)
+    end
+
+Si fuere con tipos
+
+    $params(Foo)
+    $returns(Bar)
+    a: Foo = Args[0]
+    b: Bar = dostuff(a)
+    Args[0] = b
+    end
+
+Sería algo como
+
+    _param: Foo
+    _return: Bar = dostuff(a)
+
+O con un esquema complicado de parámetros
+
+    $params(String, Int)
+    $returns(Int, Bool)
+    str: String = Args[0]
+    radix: Int = Args[1]
+    success: Bool = false
+    result: Int = 0
+    Args[0] = result
+    Args[1] = success
+    end
+
+Sería en cambio
+
+    _param: Tuple2<String, Int>
+    str: String = _param.0
+    radix: Int = _param.1
+    _return: Tuple2<Int, Bool>
+    _return.0 = 0
+    _return.1 = false
+    end
